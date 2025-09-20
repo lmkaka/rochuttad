@@ -373,9 +373,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <span className={`inline bg-gradient-to-r ${themeClasses.logoGradient} bg-clip-text text-transparent transition-all duration-300 group-hover:scale-105 hidden xs:inline`}>
               WatchWithRadar
             </span>
-            <span className={`inline bg-gradient-to-r ${themeClasses.logoGradient} bg-clip-text text-transparent transition-all duration-300 group-hover:scale-105 xs:hidden`}>
-              Radar
-            </span>
           </Link>
           
           {/* DESKTOP CONTROLS */}
@@ -468,72 +465,173 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* 📱 MOBILE SLIDE-OUT MENU */}
+      {/* 📱 ENHANCED MOBILE SLIDE-OUT MENU */}
       {isMenuOpen && (
         <>
+          {/* Backdrop Overlay */}
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden"
             onClick={() => setIsMenuOpen(false)}
             aria-hidden="true"
           />
+          
+          {/* Mobile Menu Panel */}
           <div
             ref={mobileMenuRef}
-            className={`fixed top-0 right-0 h-full w-64 ${themeClasses.mobileMenuBg} border-l ${themeClasses.headerBorder} z-50 lg:hidden transform translate-x-full`}
+            className={`fixed top-0 right-0 h-full w-80 ${themeClasses.mobileMenuBg} border-l ${themeClasses.headerBorder} z-50 lg:hidden transform translate-x-full shadow-2xl`}
             style={{ backdropFilter: 'blur(20px)' }}
           >
-            <div className="flex flex-col h-full pt-20 pb-6 px-4">
-              {/* Privacy Policy Button */}
+            {/* Menu Header */}
+            <div className={`flex items-center justify-between p-6 border-b ${themeClasses.headerBorder}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${themeClasses.logoGradient} flex items-center justify-center text-white shadow-lg`}>
+                  <WIcon />
+                </div>
+                <h3 className={`${themeClasses.text} font-bold text-lg`}>Menu</h3>
+              </div>
               <button
-                onClick={() => {
-                  setShowPolicyModal(true);
-                  setIsMenuOpen(false);
-                }}
-                className={`mobile-nav-item w-full p-3 rounded-lg ${themeClasses.navHover} flex items-center gap-3 mb-4 transition-all duration-300`}
+                onClick={() => setIsMenuOpen(false)}
+                className={`p-2 rounded-lg ${themeClasses.navHover} transition-all duration-300 hover:scale-110`}
               >
-                <InformationCircleIcon className="h-5 w-5 text-blue-500" />
-                <span className={`${themeClasses.text} font-medium`}>Privacy & Terms</span>
+                <XMarkIcon className="h-5 w-5" />
               </button>
+            </div>
 
-              {shouldShowUserIcons && (
-                <>
-                  <Link
-                    to="/profile"
-                    className={`mobile-nav-item w-full p-3 rounded-lg ${themeClasses.profileBtn} flex items-center gap-3 mb-3 transition-all duration-300`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <UserCircleIcon className="h-5 w-5" />
-                    <span className={`${themeClasses.text} font-medium`}>Profile</span>
-                  </Link>
-
-                  {isAdmin && (
-                    <Link
-                      to="/admin"
-                      className={`mobile-nav-item w-full p-3 rounded-lg ${themeClasses.adminBtn} flex items-center gap-3 mb-3 transition-all duration-300`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Cog6ToothIcon className="h-5 w-5" />
-                      <span className={`${themeClasses.text} font-medium`}>Admin Panel</span>
-                    </Link>
-                  )}
-                  
-                  <button
-                    onClick={() => {
-                      handleSignOut();
-                      setIsMenuOpen(false);
-                    }}
-                    className={`mobile-nav-item w-full p-3 rounded-lg ${themeClasses.logoutBtn} flex items-center gap-3 transition-all duration-300`}
-                  >
-                    <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                    <span className={`${themeClasses.text} font-medium`}>Logout</span>
-                  </button>
-                </>
-              )}
-
-              {!shouldShowUserIcons && (
-                <div className={`mobile-nav-item text-center p-4 ${themeClasses.textMuted}`}>
-                  <p>Please log in to access more options</p>
+            {/* Menu Content */}
+            <div className="flex flex-col h-full pt-6 pb-6 px-6 space-y-3">
+              
+              {/* User Info Section (if logged in) */}
+              {session && (
+                <div className={`mobile-nav-item p-4 rounded-xl ${themeClasses.cardBg} border ${themeClasses.headerBorder} mb-6`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${themeClasses.logoGradient} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+                      {session.user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`${themeClasses.text} font-semibold text-sm truncate`}>
+                        {profile?.name || 'User'}
+                      </p>
+                      <p className={`${themeClasses.textMuted} text-xs truncate`}>
+                        {session.user?.email}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
+
+              {/* Navigation Items */}
+              <div className="space-y-2">
+                {/* Privacy Policy */}
+                <button
+                  onClick={() => {
+                    setShowPolicyModal(true);
+                    setIsMenuOpen(false);
+                  }}
+                  className={`mobile-nav-item w-full p-4 rounded-xl ${themeClasses.navHover} flex items-center gap-4 transition-all duration-300 group hover:shadow-lg`}
+                >
+                  <div className={`p-2 rounded-lg bg-blue-500/20 text-blue-500 group-hover:scale-110 transition-transform duration-300`}>
+                    <InformationCircleIcon className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <span className={`${themeClasses.text} font-medium text-sm`}>Privacy & Terms</span>
+                    <p className={`${themeClasses.textMuted} text-xs mt-0.5`}>View our privacy policy</p>
+                  </div>
+                </button>
+
+                {/* User Navigation Items */}
+                {shouldShowUserIcons && (
+                  <>
+                    {/* Profile */}
+                    <Link
+                      to="/profile"
+                      className={`mobile-nav-item w-full p-4 rounded-xl ${themeClasses.profileBtn} flex items-center gap-4 transition-all duration-300 group hover:shadow-lg`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className={`p-2 rounded-lg bg-blue-500/20 group-hover:scale-110 transition-transform duration-300`}>
+                        <UserCircleIcon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <span className={`${themeClasses.text} font-medium text-sm`}>Profile</span>
+                        <p className={`${themeClasses.textMuted} text-xs mt-0.5`}>Manage your account</p>
+                      </div>
+                    </Link>
+
+                    {/* Admin Panel (if admin) */}
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className={`mobile-nav-item w-full p-4 rounded-xl ${themeClasses.adminBtn} flex items-center gap-4 transition-all duration-300 group hover:shadow-lg`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <div className={`p-2 rounded-lg bg-green-500/20 group-hover:scale-110 transition-transform duration-300`}>
+                          <Cog6ToothIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <span className={`${themeClasses.text} font-medium text-sm`}>Admin Panel</span>
+                          <p className={`${themeClasses.textMuted} text-xs mt-0.5`}>Manage application</p>
+                        </div>
+                        <span className={`px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-600 font-medium`}>
+                          Admin
+                        </span>
+                      </Link>
+                    )}
+
+                    {/* Divider */}
+                    <div className={`my-4 border-t ${themeClasses.headerBorder}`}></div>
+
+                    {/* Logout */}
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMenuOpen(false);
+                      }}
+                      className={`mobile-nav-item w-full p-4 rounded-xl ${themeClasses.logoutBtn} flex items-center gap-4 transition-all duration-300 group hover:shadow-lg`}
+                    >
+                      <div className={`p-2 rounded-lg bg-red-500/20 text-red-500 group-hover:scale-110 transition-transform duration-300`}>
+                        <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <span className={`${themeClasses.text} font-medium text-sm`}>Logout</span>
+                        <p className={`${themeClasses.textMuted} text-xs mt-0.5`}>Sign out of your account</p>
+                      </div>
+                    </button>
+                  </>
+                )}
+
+                {/* Not Logged In Message */}
+                {!shouldShowUserIcons && !session && (
+                  <div className={`mobile-nav-item p-6 rounded-xl ${themeClasses.cardBg} border ${themeClasses.headerBorder} text-center`}>
+                    <div className="mb-3">
+                      <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-br ${themeClasses.logoGradient} flex items-center justify-center text-white shadow-lg`}>
+                        <UserCircleIcon className="h-8 w-8" />
+                      </div>
+                    </div>
+                    <h4 className={`${themeClasses.text} font-semibold mb-2`}>Welcome!</h4>
+                    <p className={`${themeClasses.textMuted} text-sm mb-4`}>
+                      Please log in to access more features and personalize your experience.
+                    </p>
+                    <Link
+                      to="/auth"
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`${themeClasses.button} px-6 py-2 rounded-lg font-medium text-sm transition-all duration-300 hover:scale-105 shadow-lg inline-block`}
+                    >
+                      Get Started
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Info */}
+              <div className="mt-auto pt-6 border-t border-opacity-20">
+                <div className={`text-center ${themeClasses.textMuted}`}>
+                  <p className="text-xs mb-2">
+                    Made with ❤️ by WatchWithRadar Team
+                  </p>
+                  <p className="text-xs opacity-70">
+                    Version 1.0.0 • September 2025
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </>
