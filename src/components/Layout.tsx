@@ -13,7 +13,8 @@ import {
   MoonIcon, 
   ArrowRightOnRectangleIcon,
   UserCircleIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  Bars3Icon
 } from '@heroicons/react/24/solid';
 
 import { 
@@ -37,9 +38,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [showPolicyModal, setShowPolicyModal] = useState(false);
 
   const isAdmin = session && (
-  session.user?.email === 'tvradar567@gmail.com' || 
-  (profile as any)?.is_admin === true
-);
+    session.user?.email === 'tvradar567@gmail.com' || 
+    (profile as any)?.is_admin === true
+  );
 
   // Check if we should show user icons
   const shouldShowUserIcons = session && (
@@ -79,7 +80,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const themeClasses = isDarkMode
     ? {
         bg: 'bg-slate-900',
-        headerBg: 'rgba(15, 23, 42, 0.75)',
+        headerBg: 'rgba(15, 23, 42, 0.9)',
         headerBorder: 'border-purple-500/20',
         headerScrolled: 'scrolled-dark',
         text: 'text-slate-100',
@@ -89,17 +90,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         button: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white',
         navHover: 'hover:bg-purple-500/20 text-slate-200',
         logoGradient: 'from-purple-400 to-blue-400',
-        mobileMenuBg: 'bg-slate-900/95',
+        mobileMenuBg: 'bg-slate-900/98 backdrop-blur-xl',
         logoutBtn: 'hover:bg-red-500/20 text-red-400',
         profileBtn: 'hover:bg-blue-500/20 text-blue-400',
         adminBtn: 'hover:bg-green-500/20 text-green-400',
         badge: 'bg-blue-600/90 hover:bg-blue-700/90 text-white border-blue-400/20',
         modalBg: 'bg-slate-800/95 border-slate-700/50',
         cardBg: 'bg-slate-800/60 border-slate-700/50 backdrop-blur-sm',
+        hamburger: 'hover:bg-purple-500/20 text-purple-400',
       }
     : {
         bg: 'bg-slate-50',
-        headerBg: 'rgba(255, 255, 255, 0.75)',
+        headerBg: 'rgba(255, 255, 255, 0.9)',
         headerBorder: 'border-indigo-200/50',
         headerScrolled: 'scrolled-light',
         text: 'text-slate-800',
@@ -109,13 +111,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         button: 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white',
         navHover: 'hover:bg-indigo-500/20 text-slate-700',
         logoGradient: 'from-indigo-600 to-purple-600',
-        mobileMenuBg: 'bg-white/95',
+        mobileMenuBg: 'bg-white/98 backdrop-blur-xl',
         logoutBtn: 'hover:bg-red-500/20 text-red-600',
         profileBtn: 'hover:bg-blue-500/20 text-blue-600',
         adminBtn: 'hover:bg-green-500/20 text-green-600',
         badge: 'bg-indigo-600/90 hover:bg-indigo-700/90 text-white border-indigo-400/20',
         modalBg: 'bg-white/95 border-slate-200/60',
         cardBg: 'bg-white/80 border-slate-200/60 backdrop-blur-sm',
+        hamburger: 'hover:bg-indigo-500/20 text-indigo-600',
       };
 
   // --- Enhanced Header Loading Animations ---
@@ -170,11 +173,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         { scale: 1, autoAlpha: 1, rotationY: 0, duration: 1, ease: 'back.out(1.7)' }, 
         0.2
       )
-      .fromTo('.logo-anim .w-10', 
-        { rotationZ: -90 },
-        { rotationZ: 0, duration: 0.8, ease: 'power3.out' }, 
-        0.4
-      )
       .fromTo('.header-controls', 
         { x: 50, autoAlpha: 0 },
         { x: 0, autoAlpha: 1, duration: 0.8 }, 
@@ -188,38 +186,44 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
       
       tl.fromTo(headerRef.current, 
-        { y: -80, autoAlpha: 0 },
-        { y: 0, autoAlpha: 1, duration: 1 }
+        { y: -60, autoAlpha: 0 },
+        { y: 0, autoAlpha: 1, duration: 0.8 }
       )
       .fromTo('.logo-anim', 
-        { scale: 0.5, autoAlpha: 0 },
-        { scale: 1, autoAlpha: 1, duration: 0.8, ease: 'back.out(1.4)' }, 
+        { scale: 0.7, autoAlpha: 0 },
+        { scale: 1, autoAlpha: 1, duration: 0.6, ease: 'back.out(1.4)' }, 
         0.2
       )
       .fromTo('.mobile-controls', 
-        { x: 30, autoAlpha: 0 },
-        { x: 0, autoAlpha: 1, duration: 0.6 }, 
-        0.4
+        { x: 20, autoAlpha: 0 },
+        { x: 0, autoAlpha: 1, duration: 0.4 }, 
+        0.3
       );
     });
 
     return () => mm.revert();
   }, { scope: headerRef, dependencies: [themeClasses.headerScrolled] });
 
+  // Mobile menu slide animation
   useGSAP(() => {
     if (!mobileMenuRef.current) return;
     
-    gsap.to(mobileMenuRef.current, {
-      x: isMenuOpen ? '0%' : '100%',
-      duration: 0.4,
-      ease: 'power3.inOut',
-    });
     if (isMenuOpen) {
-      gsap.fromTo(
-        '.mobile-nav-item',
-        { autoAlpha: 0, y: 15 },
-        { autoAlpha: 1, y: 0, stagger: 0.05, delay: 0.2, ease: 'power2.out' }
+      gsap.fromTo(mobileMenuRef.current,
+        { x: '100%', autoAlpha: 0 },
+        { x: '0%', autoAlpha: 1, duration: 0.3, ease: 'power3.out' }
       );
+      gsap.fromTo('.mobile-nav-item',
+        { autoAlpha: 0, y: 20 },
+        { autoAlpha: 1, y: 0, stagger: 0.05, delay: 0.1, ease: 'power2.out' }
+      );
+    } else {
+      gsap.to(mobileMenuRef.current, {
+        x: '100%',
+        autoAlpha: 0,
+        duration: 0.25,
+        ease: 'power3.inOut',
+      });
     }
   }, { dependencies: [isMenuOpen], scope: mobileMenuRef });
 
@@ -349,126 +353,62 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {/* Enhanced Header with Privacy Icon */}
+      {/* 📱 ULTRA MOBILE-FRIENDLY HEADER */}
       <header
         ref={headerRef}
-        className={`sticky top-0 z-30 backdrop-blur-md border-b transition-all duration-500 ${themeClasses.headerBorder}`}
+        className={`sticky top-0 z-40 backdrop-blur-md border-b transition-all duration-300 ${themeClasses.headerBorder}`}
         style={{ background: themeClasses.headerBg }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 sm:h-20">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 flex items-center justify-between h-14 sm:h-16 lg:h-20">
+          {/* RESPONSIVE LOGO */}
           <Link
             to="/dashboard"
-            className={`logo-anim font-bold text-xl sm:text-2xl flex items-center gap-3 group ${themeClasses.text}`}
+            className={`logo-anim font-bold text-lg sm:text-xl lg:text-2xl flex items-center gap-2 sm:gap-3 group ${themeClasses.text}`}
           >
             <div
-              className={`w-10 h-10 rounded-xl bg-gradient-to-br ${themeClasses.logoGradient} flex items-center justify-center text-white shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl`}
+              className={`w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-br ${themeClasses.logoGradient} flex items-center justify-center text-white shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl`}
             >
               <WIcon />
             </div>
-            <span className={`inline bg-gradient-to-r ${themeClasses.logoGradient} bg-clip-text text-transparent transition-all duration-300 group-hover:scale-105`}>
+            <span className={`inline bg-gradient-to-r ${themeClasses.logoGradient} bg-clip-text text-transparent transition-all duration-300 group-hover:scale-105 hidden xs:inline`}>
               WatchWithRadar
+            </span>
+            <span className={`inline bg-gradient-to-r ${themeClasses.logoGradient} bg-clip-text text-transparent transition-all duration-300 group-hover:scale-105 xs:hidden`}>
+              Radar
             </span>
           </Link>
           
-          {/* Desktop Controls with Privacy Icon */}
-          <div className="hidden md:flex items-center gap-2 header-controls">
+          {/* DESKTOP CONTROLS */}
+          <div className="hidden lg:flex items-center gap-1 header-controls">
             <button
               onClick={toggleTheme}
-              className={`p-3 rounded-lg ${themeClasses.navHover} flex items-center justify-center transition-all duration-300 hover:scale-110`}
+              className={`p-2.5 rounded-lg ${themeClasses.navHover} flex items-center justify-center transition-all duration-300 hover:scale-110`}
               aria-label="Toggle theme"
               title="Toggle theme"
-              style={{ minWidth: 44, minHeight: 44 }}
             >
               {isDarkMode ? (
-                <SunIcon className="h-6 w-6 text-yellow-400 transition-transform duration-300 hover:rotate-12" />
+                <SunIcon className="h-5 w-5 text-yellow-400 transition-transform duration-300 hover:rotate-12" />
               ) : (
-                <MoonIcon className="h-6 w-6 text-slate-600 transition-transform duration-300 hover:-rotate-12" />
+                <MoonIcon className="h-5 w-5 text-slate-600 transition-transform duration-300 hover:-rotate-12" />
               )}
             </button>
 
-            {/* PRIVACY POLICY ICON IN HEADER */}
             <button
               onClick={() => setShowPolicyModal(true)}
-              className={`p-3 rounded-lg ${themeClasses.navHover} flex items-center justify-center transition-all duration-300 hover:scale-110`}
+              className={`p-2.5 rounded-lg ${themeClasses.navHover} flex items-center justify-center transition-all duration-300 hover:scale-110`}
               aria-label="Privacy & Terms"
               title="Privacy & Terms"
-              style={{ minWidth: 44, minHeight: 44 }}
             >
-              <InformationCircleIcon className="h-6 w-6 text-blue-500 transition-transform duration-300 hover:rotate-12" />
+              <InformationCircleIcon className="h-5 w-5 text-blue-500 transition-transform duration-300 hover:rotate-12" />
             </button>
 
             {shouldShowUserIcons && (
               <>
                 <Link
                   to="/profile"
-                  className={`p-3 rounded-lg ${themeClasses.profileBtn} flex items-center justify-center transition-all duration-300 hover:scale-110`}
+                  className={`p-2.5 rounded-lg ${themeClasses.profileBtn} flex items-center justify-center transition-all duration-300 hover:scale-110`}
                   aria-label="Profile"
                   title="Profile"
-                  style={{ minWidth: 44, minHeight: 44 }}
-                >
-                  <UserCircleIcon className="h-6 w-6" />
-                </Link>
-
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    className={`p-3 rounded-lg ${themeClasses.adminBtn} flex items-center justify-center transition-all duration-300 hover:scale-110`}
-                    aria-label="Admin Panel"
-                    title="Admin Panel"
-                    style={{ minWidth: 44, minHeight: 44 }}
-                  >
-                    <Cog6ToothIcon className="h-6 w-6" />
-                  </Link>
-                )}
-                
-                <button
-                  onClick={handleSignOut}
-                  className={`p-3 rounded-lg ${themeClasses.logoutBtn} flex items-center justify-center transition-all duration-300 hover:scale-110`}
-                  aria-label="Logout"
-                  title="Logout"
-                  style={{ minWidth: 44, minHeight: 44 }}
-                >
-                  <ArrowRightOnRectangleIcon className="h-6 w-6" />
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Mobile Header Controls with Privacy Icon */}
-          <div className="md:hidden flex items-center gap-2 mobile-controls">
-            <button
-              onClick={toggleTheme}
-              className={`p-3 rounded-md ${themeClasses.navHover} flex items-center justify-center transition-all duration-300 hover:scale-110`}
-              aria-label="Toggle theme"
-              title="Toggle theme"
-              style={{ minWidth: 44, minHeight: 44 }}
-            >
-              {isDarkMode ? (
-                <SunIcon className="h-6 w-6 text-yellow-400 transition-transform duration-300" />
-              ) : (
-                <MoonIcon className="h-6 w-6 text-slate-600 transition-transform duration-300" />
-              )}
-            </button>
-
-            {/* PRIVACY POLICY ICON IN MOBILE HEADER */}
-            <button
-              onClick={() => setShowPolicyModal(true)}
-              className={`p-3 rounded-md ${themeClasses.navHover} flex items-center justify-center transition-all duration-300 hover:scale-110`}
-              aria-label="Privacy & Terms"
-              title="Privacy & Terms"
-              style={{ minWidth: 44, minHeight: 44 }}
-            >
-              <InformationCircleIcon className="h-5 w-5 text-blue-500 transition-transform duration-300" />
-            </button>
-
-            {shouldShowUserIcons && (
-              <>
-                <Link
-                  to="/profile"
-                  className={`p-3 rounded-md ${themeClasses.profileBtn} flex items-center justify-center transition-all duration-300 hover:scale-110`}
-                  aria-label="Profile"
-                  title="Profile"
-                  style={{ minWidth: 44, minHeight: 44 }}
                 >
                   <UserCircleIcon className="h-5 w-5" />
                 </Link>
@@ -476,10 +416,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {isAdmin && (
                   <Link
                     to="/admin"
-                    className={`p-3 rounded-md ${themeClasses.adminBtn} flex items-center justify-center transition-all duration-300 hover:scale-110`}
+                    className={`p-2.5 rounded-lg ${themeClasses.adminBtn} flex items-center justify-center transition-all duration-300 hover:scale-110`}
                     aria-label="Admin Panel"
                     title="Admin Panel"
-                    style={{ minWidth: 44, minHeight: 44 }}
                   >
                     <Cog6ToothIcon className="h-5 w-5" />
                   </Link>
@@ -487,25 +426,117 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 
                 <button
                   onClick={handleSignOut}
-                  className={`p-3 rounded-md ${themeClasses.logoutBtn} flex items-center justify-center transition-all duration-300 hover:scale-110`}
+                  className={`p-2.5 rounded-lg ${themeClasses.logoutBtn} flex items-center justify-center transition-all duration-300 hover:scale-110`}
                   aria-label="Logout"
                   title="Logout"
-                  style={{ minWidth: 44, minHeight: 44 }}
                 >
                   <ArrowRightOnRectangleIcon className="h-5 w-5" />
                 </button>
               </>
             )}
           </div>
+
+          {/* MOBILE HAMBURGER MENU BUTTON */}
+          <div className="lg:hidden flex items-center gap-1 mobile-controls">
+            {/* Quick Theme Toggle on Mobile */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-md ${themeClasses.navHover} flex items-center justify-center transition-all duration-300 hover:scale-110`}
+              aria-label="Toggle theme"
+              title="Toggle theme"
+            >
+              {isDarkMode ? (
+                <SunIcon className="h-4 w-4 text-yellow-400" />
+              ) : (
+                <MoonIcon className="h-4 w-4 text-slate-600" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`p-2 rounded-md ${themeClasses.hamburger} flex items-center justify-center transition-all duration-300 hover:scale-110`}
+              aria-label="Toggle menu"
+              title="Menu"
+            >
+              {isMenuOpen ? (
+                <XMarkIcon className="h-5 w-5" />
+              ) : (
+                <Bars3Icon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
+      {/* 📱 MOBILE SLIDE-OUT MENU */}
       {isMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
-          onClick={() => setIsMenuOpen(false)}
-          aria-hidden="true"
-        />
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden"
+            onClick={() => setIsMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            ref={mobileMenuRef}
+            className={`fixed top-0 right-0 h-full w-64 ${themeClasses.mobileMenuBg} border-l ${themeClasses.headerBorder} z-50 lg:hidden transform translate-x-full`}
+            style={{ backdropFilter: 'blur(20px)' }}
+          >
+            <div className="flex flex-col h-full pt-20 pb-6 px-4">
+              {/* Privacy Policy Button */}
+              <button
+                onClick={() => {
+                  setShowPolicyModal(true);
+                  setIsMenuOpen(false);
+                }}
+                className={`mobile-nav-item w-full p-3 rounded-lg ${themeClasses.navHover} flex items-center gap-3 mb-4 transition-all duration-300`}
+              >
+                <InformationCircleIcon className="h-5 w-5 text-blue-500" />
+                <span className={`${themeClasses.text} font-medium`}>Privacy & Terms</span>
+              </button>
+
+              {shouldShowUserIcons && (
+                <>
+                  <Link
+                    to="/profile"
+                    className={`mobile-nav-item w-full p-3 rounded-lg ${themeClasses.profileBtn} flex items-center gap-3 mb-3 transition-all duration-300`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <UserCircleIcon className="h-5 w-5" />
+                    <span className={`${themeClasses.text} font-medium`}>Profile</span>
+                  </Link>
+
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className={`mobile-nav-item w-full p-3 rounded-lg ${themeClasses.adminBtn} flex items-center gap-3 mb-3 transition-all duration-300`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Cog6ToothIcon className="h-5 w-5" />
+                      <span className={`${themeClasses.text} font-medium`}>Admin Panel</span>
+                    </Link>
+                  )}
+                  
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
+                    className={`mobile-nav-item w-full p-3 rounded-lg ${themeClasses.logoutBtn} flex items-center gap-3 transition-all duration-300`}
+                  >
+                    <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                    <span className={`${themeClasses.text} font-medium`}>Logout</span>
+                  </button>
+                </>
+              )}
+
+              {!shouldShowUserIcons && (
+                <div className={`mobile-nav-item text-center p-4 ${themeClasses.textMuted}`}>
+                  <p>Please log in to access more options</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
       )}
 
       <main className="flex-1 relative z-10">{children}</main>
