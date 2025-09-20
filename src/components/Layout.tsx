@@ -37,10 +37,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
 
-  const isAdmin = session && (
-    session.user?.email === 'tvradar567@gmail.com' || 
-    (profile as any)?.is_admin === true
-  );
+ const isAdmin = session && (
+  session.user?.email === 'tvradar567@gmail.com' ||
+  session.user?.email === 'methodsomp@gmail.com' ||
+  (profile as any)?.is_admin === true
+);
+
 
   // Check if we should show user icons
   const shouldShowUserIcons = session && (
