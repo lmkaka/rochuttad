@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { formatMatchTime } from '../utils/format'
 import { pickLink } from '../utils/linkPicker'
 import gsap from 'gsap'
