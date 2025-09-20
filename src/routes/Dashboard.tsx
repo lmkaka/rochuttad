@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthProvider'
 import MatchCard from '../components/MatchCard'
