@@ -1,0 +1,331 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap');
+
+/* Ultra-Modern Design System */
+@theme {
+  /* Neon Accent Colors */
+  --color-neon-green: #00ff88;
+  --color-neon-blue: #0066ff;
+  --color-neon-pink: #ff0080;
+  --color-neon-purple: #8b5cf6;
+  
+  /* Brutalist Base */
+  --color-base: #0a0a0b;
+  --color-surface: rgba(255,255,255,0.05);
+  --color-surface-elevated: rgba(255,255,255,0.08);
+  --color-border: rgba(255,255,255,0.1);
+  --color-border-bright: rgba(0,255,136,0.3);
+  
+  /* Glass Effects */
+  --glass-bg: rgba(255,255,255,0.05);
+  --glass-border: rgba(255,255,255,0.1);
+  --glass-shadow: 0 25px 50px rgba(0,0,0,0.3);
+  
+  /* Typography */
+  --font-display: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* Advanced Glassmorphism */
+@utility glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+@utility neon-glow {
+  box-shadow: 0 0 20px rgba(0,255,136,0.5), 
+              0 0 40px rgba(0,255,136,0.3),
+              0 0 80px rgba(0,255,136,0.1);
+}
+
+/* Base styles */
+@layer base {
+  * {
+    font-family: var(--font-display);
+  }
+  
+  html, body, #root {
+    height: 100%;
+    background: var(--color-base);
+    color: rgba(255,255,255,0.9);
+    overflow-x: hidden;
+  }
+  
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+/* Ultra-Modern Component System */
+@layer components {
+  /* Glassmorphism Cards */
+  .card {
+    @apply glass rounded-3xl p-6 relative overflow-hidden;
+    transform-style: preserve-3d;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .card:hover {
+    transform: translateY(-8px) rotateX(5deg) rotateY(5deg);
+    box-shadow: 0 35px 70px rgba(0,0,0,0.4), 
+                0 0 30px rgba(0,255,136,0.2);
+  }
+
+  /* Magnetic Buttons */
+  .btn-primary { 
+    @apply relative px-8 py-4 rounded-2xl font-semibold text-white;
+    background: linear-gradient(135deg, #00ff88, #0066ff);
+    border: 1px solid rgba(0,255,136,0.3);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+  }
+  
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+  }
+  
+  .btn-primary:hover::before {
+    transform: translateX(100%);
+  }
+  
+  .btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(0,255,136,0.4);
+  }
+
+  .btn-secondary { 
+    @apply glass px-6 py-3 rounded-xl text-white border border-white/20;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(0,255,136,0.5);
+  }
+
+  /* Status Chips */
+  .chip { 
+    @apply inline-flex items-center gap-2 text-xs px-4 py-2 rounded-full;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Form Elements */
+  .input {
+    @apply w-full px-6 py-4 rounded-2xl text-white placeholder-white/40;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+  }
+  
+  .input:focus {
+    outline: none;
+    border-color: #00ff88;
+    box-shadow: 0 0 20px rgba(0,255,136,0.3);
+  }
+
+  .label {
+    @apply text-sm text-white/80 mb-2 font-medium;
+  }
+
+  /* Supabase Auth UI - Ultra-Modern Styling */
+  .supabase-auth-ui {
+    --supabase-auth-brand-color: #00ff88;
+    --supabase-auth-brand-button-text-color: white;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .supabase-auth-ui input {
+    background: rgba(255,255,255,0.05) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 16px !important;
+    padding: 16px 20px !important;
+    backdrop-filter: blur(10px) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .supabase-auth-ui input:focus {
+    outline: none !important;
+    border-color: #00ff88 !important;
+    box-shadow: 0 0 20px rgba(0,255,136,0.3) !important;
+  }
+
+  .supabase-auth-ui button {
+    border-radius: 16px !important;
+    background: linear-gradient(135deg, #00ff88, #0066ff) !important;
+    color: white !important;
+    padding: 16px 24px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    border: 1px solid rgba(0,255,136,0.3) !important;
+  }
+
+  .supabase-auth-ui button:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 10px 30px rgba(0,255,136,0.4) !important;
+  }
+
+  .supabase-auth-ui label {
+    color: rgba(255,255,255,0.8) !important;
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+    font-weight: 500 !important;
+  }
+
+  .supabase-auth-ui a {
+    color: #00ff88 !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .supabase-auth-ui a:hover {
+    color: #0066ff !important;
+  }
+
+  .supabase-auth-ui .supabase-auth-ui_ui-message {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 16px !important;
+    color: rgba(255,255,255,0.9) !important;
+    padding: 16px 20px !important;
+    backdrop-filter: blur(10px) !important;
+  }
+
+  .supabase-auth-ui .supabase-auth-ui_ui-divider {
+    background: rgba(255,255,255,0.1) !important;
+  }
+
+  /* Match Status Indicators */
+  .live-match {
+    border: 1px solid rgba(255, 0, 128, 0.4);
+    background: linear-gradient(135deg, rgba(255, 0, 128, 0.1), rgba(0,0,0,0));
+    box-shadow: 0 0 30px rgba(255, 0, 128, 0.2);
+  }
+
+  .upcoming-match {
+    border: 1px solid rgba(0, 255, 136, 0.4);
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0,0,0,0));
+    box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+  }
+
+  .past-match {
+    opacity: 0.6;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* Loading Animations */
+  .skeleton-shimmer {
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%) skewX(-12deg); }
+    100% { transform: translateX(200%) skewX(-12deg); }
+  }
+
+  /* Brand Logo with Neon Effect */
+  .brand-logo {
+    background: linear-gradient(135deg, #00ff88, #0066ff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(0,255,136,0.5));
+  }
+
+  /* Stats Cards with 3D Hover */
+  .stats-card {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+  }
+
+  .stats-card:hover {
+    transform: translateY(-8px) rotateX(5deg);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.4), 
+                0 0 30px rgba(0,255,136,0.2);
+  }
+
+  /* Entrance Animations */
+  .fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(40px) rotateX(10deg);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) rotateX(0deg);
+    }
+  }
+
+  /* Magnetic Button Effects */
+  .magnetic {
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  /* Particle System */
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: float 6s infinite ease-in-out;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+  }
+
+  /* Neon Glow Effects */
+  .neon-pulse {
+    animation: neonPulse 2s infinite ease-in-out;
+  }
+
+  @keyframes neonPulse {
+    0%, 100% { 
+      box-shadow: 0 0 20px rgba(0,255,136,0.5);
+    }
+    50% { 
+      box-shadow: 0 0 40px rgba(0,255,136,0.8), 
+                  0 0 60px rgba(0,255,136,0.4);
+    }
+  }
+
+  /* Scroll-triggered animations */
+  .parallax-slow { transform: translateZ(-2px) scale(1.02); }
+  .parallax-fast { transform: translateZ(-1px) scale(1.01); }
+
+  /* Ripple animation for buttons */
+  @keyframes ripple {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+  .scrolled-light {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: rgba(236, 239, 241, 0.8) !important;
+}
+
+.scrolled-dark {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: rgba(30, 41, 59, 0.8) !important;
+}
+}
