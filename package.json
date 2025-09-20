@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build --mode production",
+    "build:ts": "tsc -b && vite build",
+    "build:force": "vite build --mode production --emptyOutDir",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
