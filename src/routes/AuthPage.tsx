@@ -10,7 +10,9 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   UserPlusIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  KeyIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline'
 import { PlayIcon } from '@heroicons/react/24/solid'
 
@@ -156,7 +158,6 @@ const OptimizedParticles = ({ isDarkMode }: { isDarkMode: boolean }) => {
       }
 
       ctx.globalAlpha = 1
-
       animationFrameRef.current = requestAnimationFrame(animate)
     }
 
@@ -171,7 +172,6 @@ const OptimizedParticles = ({ isDarkMode }: { isDarkMode: boolean }) => {
     }
 
     window.addEventListener('resize', handleResize, { passive: true })
-
     initParticles()
     animate(0)
 
@@ -196,10 +196,10 @@ const OptimizedParticles = ({ isDarkMode }: { isDarkMode: boolean }) => {
 export default function AuthPage() {
   const { session, profile } = useAuth()
   const navigate = useNavigate()
-  
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup' | 'forgot'>('signin')
   const [isDarkMode, setIsDarkMode] = useState(globalTheme.isDarkMode)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -223,7 +223,8 @@ export default function AuthPage() {
     googleButton: 'bg-slate-700/60 hover:bg-slate-600/60 text-white border-slate-600/50',
     iconColor: 'text-slate-400',
     tabActive: 'bg-blue-600 text-white shadow-lg',
-    tabInactive: 'bg-slate-700/40 text-slate-400 hover:text-slate-300 hover:bg-slate-700/60'
+    tabInactive: 'bg-slate-700/40 text-slate-400 hover:text-slate-300 hover:bg-slate-700/60',
+    linkText: 'text-blue-400 hover:text-blue-300'
   } : {
     bg: 'bg-slate-50',
     cardBg: 'bg-white/80 border-slate-200/60 backdrop-blur-sm',
@@ -235,7 +236,8 @@ export default function AuthPage() {
     googleButton: 'bg-white/90 hover:bg-white text-slate-700 border-slate-200/60',
     iconColor: 'text-slate-500',
     tabActive: 'bg-indigo-600 text-white shadow-lg',
-    tabInactive: 'bg-slate-100/80 text-slate-600 hover:text-slate-700 hover:bg-slate-200/80'
+    tabInactive: 'bg-slate-100/80 text-slate-600 hover:text-slate-700 hover:bg-slate-200/80',
+    linkText: 'text-indigo-600 hover:text-indigo-700'
   }, [isDarkMode])
 
   // Listen for theme changes
@@ -249,7 +251,7 @@ export default function AuthPage() {
   }, [])
 
   // Clear form when switching tabs
-  const handleTabSwitch = useCallback((tab: 'signin' | 'signup') => {
+  const handleTabSwitch = useCallback((tab: 'signin' | 'signup' | 'forgot') => {
     setActiveTab(tab)
     setFormData({ email: '', password: '', confirmPassword: '' })
     setError('')
@@ -306,6 +308,29 @@ export default function AuthPage() {
       setError(err.message || 'An error occurred')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Forgot Password Handler
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setForgotLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      })
+
+      if (error) throw error
+      
+      setSuccess('Password reset link sent to your email!')
+      setFormData({ email: '', password: '', confirmPassword: '' })
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email')
+    } finally {
+      setForgotLoading(false)
     }
   }
 
@@ -421,180 +446,283 @@ export default function AuthPage() {
 
         {/* Auth Card */}
         <div className={`${themeClasses.cardBg} rounded-2xl border p-6 shadow-xl`}>
-          {/* Tab Navigation */}
-          <div className="flex mb-6 bg-slate-500/10 rounded-xl p-1">
-            <button
-              onClick={() => handleTabSwitch('signin')}
-              className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
-                activeTab === 'signin' ? themeClasses.tabActive : themeClasses.tabInactive
-              }`}
-            >
-              <ArrowRightOnRectangleIcon className="h-4 w-4" />
-              Sign In
-            </button>
-            <button
-              onClick={() => handleTabSwitch('signup')}
-              className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
-                activeTab === 'signup' ? themeClasses.tabActive : themeClasses.tabInactive
-              }`}
-            >
-              <UserPlusIcon className="h-4 w-4" />
-              Sign Up
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleEmailAuth} className="space-y-5">
-            {/* Email Input */}
-            <div>
-              <label className={`block text-sm font-medium ${themeClasses.text} mb-2`}>
-                Email Address
-              </label>
-              <div className="relative">
-                <EnvelopeIcon className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${themeClasses.iconColor}`} />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className={`w-full pl-11 pr-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
-                  placeholder="Enter your email"
-                />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div>
-              <label className={`block text-sm font-medium ${themeClasses.text} mb-2`}>
-                Password
-              </label>
-              <div className="relative">
-                <LockClosedIcon className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${themeClasses.iconColor}`} />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  className={`w-full pl-11 pr-12 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
-                  placeholder="Enter your password"
-                />
+          
+          {/* Forgot Password View */}
+          {activeTab === 'forgot' ? (
+            <>
+              {/* Back Button */}
+              <div className="mb-6">
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${themeClasses.iconColor} hover:text-blue-500 transition-colors p-1`}
+                  onClick={() => handleTabSwitch('signin')}
+                  className={`flex items-center gap-2 ${themeClasses.linkText} text-sm font-medium transition-colors duration-200`}
                 >
-                  {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                  <ArrowLeftIcon className="h-4 w-4" />
+                  Back to Sign In
                 </button>
               </div>
-            </div>
 
-            {/* Confirm Password - Sign Up Only */}
-            {activeTab === 'signup' && (
-              <div>
-                <label className={`block text-sm font-medium ${themeClasses.text} mb-2`}>
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <LockClosedIcon className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${themeClasses.iconColor}`} />
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    required
-                    className={`w-full pl-11 pr-12 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
-                    placeholder="Confirm your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${themeClasses.iconColor} hover:text-blue-500 transition-colors p-1`}
-                  >
-                    {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                  </button>
+              {/* Forgot Password Header */}
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 mb-4">
+                  <KeyIcon className="h-6 w-6 text-blue-600" />
+                </div>
+                <h2 className={`text-xl font-bold ${themeClasses.text} mb-2`}>
+                  Reset Password
+                </h2>
+                <p className={`text-sm ${themeClasses.textMuted}`}>
+                  Enter your email and we'll send you a reset link
+                </p>
+              </div>
+
+              {/* Forgot Password Form */}
+              <form onSubmit={handleForgotPassword} className="space-y-5">
+                {/* Email Input */}
+                <div>
+                  <label className={`block text-sm font-medium ${themeClasses.text} mb-2`}>
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <EnvelopeIcon className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${themeClasses.iconColor}`} />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      className={`w-full pl-11 pr-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                </div>
+
+                {/* Success/Error Messages */}
+                {success && (
+                  <div className={`p-3 rounded-xl border ${isDarkMode ? 'text-green-300 bg-green-900/20 border-green-700/30' : 'text-green-700 bg-green-50 border-green-200'}`}>
+                    <div className="flex items-center gap-2">
+                      <CheckCircleIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <span className="text-sm">{success}</span>
+                    </div>
+                  </div>
+                )}
+
+                {error && (
+                  <div className={`p-3 rounded-xl border ${isDarkMode ? 'text-red-300 bg-red-900/20 border-red-700/30' : 'text-red-700 bg-red-50 border-red-200'}`}>
+                    <div className="flex items-center gap-2">
+                      <ExclamationTriangleIcon className="h-5 w-5 text-red-500 flex-shrink-0" />
+                      <span className="text-sm">{error}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className={`w-full py-3 px-6 ${themeClasses.button} font-medium rounded-xl transition-colors duration-200 disabled:opacity-50 shadow-lg`}
+                >
+                  {forgotLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Sending Reset Link...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <KeyIcon className="h-5 w-5" />
+                      <span>Send Reset Link</span>
+                    </div>
+                  )}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              {/* Tab Navigation */}
+              <div className="flex mb-6 bg-slate-500/10 rounded-xl p-1">
+                <button
+                  onClick={() => handleTabSwitch('signin')}
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                    activeTab === 'signin' ? themeClasses.tabActive : themeClasses.tabInactive
+                  }`}
+                >
+                  <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                  Sign In
+                </button>
+                <button
+                  onClick={() => handleTabSwitch('signup')}
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                    activeTab === 'signup' ? themeClasses.tabActive : themeClasses.tabInactive
+                  }`}
+                >
+                  <UserPlusIcon className="h-4 w-4" />
+                  Sign Up
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleEmailAuth} className="space-y-5">
+                {/* Email Input */}
+                <div>
+                  <label className={`block text-sm font-medium ${themeClasses.text} mb-2`}>
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <EnvelopeIcon className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${themeClasses.iconColor}`} />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      className={`w-full pl-11 pr-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                </div>
+
+                {/* Password Input */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className={`block text-sm font-medium ${themeClasses.text}`}>
+                      Password
+                    </label>
+                    {activeTab === 'signin' && (
+                      <button
+                        type="button"
+                        onClick={() => handleTabSwitch('forgot')}
+                        className={`text-sm ${themeClasses.linkText} transition-colors duration-200`}
+                      >
+                        Forgot?
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <LockClosedIcon className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${themeClasses.iconColor}`} />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      required
+                      className={`w-full pl-11 pr-12 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${themeClasses.iconColor} hover:text-blue-500 transition-colors p-1`}
+                    >
+                      {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password - Sign Up Only */}
+                {activeTab === 'signup' && (
+                  <div>
+                    <label className={`block text-sm font-medium ${themeClasses.text} mb-2`}>
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <LockClosedIcon className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${themeClasses.iconColor}`} />
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        required
+                        className={`w-full pl-11 pr-12 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                        placeholder="Confirm your password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${themeClasses.iconColor} hover:text-blue-500 transition-colors p-1`}
+                      >
+                        {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {success && (
+                  <div className={`p-3 rounded-xl border ${isDarkMode ? 'text-green-300 bg-green-900/20 border-green-700/30' : 'text-green-700 bg-green-50 border-green-200'}`}>
+                    <div className="flex items-center gap-2">
+                      <CheckCircleIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <span className="text-sm">{success}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {error && (
+                  <div className={`p-3 rounded-xl border ${isDarkMode ? 'text-red-300 bg-red-900/20 border-red-700/30' : 'text-red-700 bg-red-50 border-red-200'}`}>
+                    <div className="flex items-center gap-2">
+                      <ExclamationTriangleIcon className="h-5 w-5 text-red-500 flex-shrink-0" />
+                      <span className="text-sm">{error}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full py-3 px-6 ${themeClasses.button} font-medium rounded-xl transition-colors duration-200 disabled:opacity-50 shadow-lg`}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>{activeTab === 'signup' ? 'Creating Account...' : 'Signing In...'}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      {activeTab === 'signup' ? <UserPlusIcon className="h-5 w-5" /> : <CheckCircleIcon className="h-5 w-5" />}
+                      <span>{activeTab === 'signup' ? 'Create Account' : 'Sign In'}</span>
+                    </div>
+                  )}
+                </button>
+              </form>
+
+              {/* Enhanced Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className={`w-full border-t ${isDarkMode ? 'border-slate-600/50' : 'border-slate-200/60'}`}></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className={`
+                    px-4 py-1.5 text-sm font-medium
+                    ${themeClasses.textMuted} 
+                    ${isDarkMode 
+                      ? 'bg-slate-800/90 border border-slate-700/50' 
+                      : 'bg-white/95 border border-slate-200/60'
+                    } 
+                    rounded-full shadow-sm
+                  `}>
+                    <span className="flex items-center gap-2">
+                      <span className={`w-1.5 h-1.5 rounded-full ${isDarkMode ? 'bg-slate-500' : 'bg-slate-400'}`}></span>
+                      or continue with
+                      <span className={`w-1.5 h-1.5 rounded-full ${isDarkMode ? 'bg-slate-500' : 'bg-slate-400'}`}></span>
+                    </span>
+                  </span>
                 </div>
               </div>
-            )}
 
-            {/* Success Message */}
-            {success && (
-              <div className={`p-3 rounded-xl border ${isDarkMode ? 'text-green-300 bg-green-900/20 border-green-700/30' : 'text-green-700 bg-green-50 border-green-200'}`}>
-                <div className="flex items-center gap-2">
-                  <CheckCircleIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span className="text-sm">{success}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Error Message */}
-            {error && (
-              <div className={`p-3 rounded-xl border ${isDarkMode ? 'text-red-300 bg-red-900/20 border-red-700/30' : 'text-red-700 bg-red-50 border-red-200'}`}>
-                <div className="flex items-center gap-2">
-                  <ExclamationTriangleIcon className="h-5 w-5 text-red-500 flex-shrink-0" />
-                  <span className="text-sm">{error}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-3 px-6 ${themeClasses.button} font-medium rounded-xl transition-colors duration-200 disabled:opacity-50 shadow-lg`}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>{activeTab === 'signup' ? 'Creating Account...' : 'Signing In...'}</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  {activeTab === 'signup' ? <UserPlusIcon className="h-5 w-5" /> : <CheckCircleIcon className="h-5 w-5" />}
-                  <span>{activeTab === 'signup' ? 'Create Account' : 'Sign In'}</span>
-                </div>
-              )}
-            </button>
-          </form>
-
-          {/* Enhanced Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className={`w-full border-t ${isDarkMode ? 'border-slate-600/50' : 'border-slate-200/60'}`}></div>
-            </div>
-            <div className="relative flex justify-center">
-              <span className={`
-                px-4 py-1.5 text-sm font-medium
-                ${themeClasses.textMuted} 
-                ${isDarkMode 
-                  ? 'bg-slate-800/90 border border-slate-700/50' 
-                  : 'bg-white/95 border border-slate-200/60'
-                } 
-                rounded-full shadow-sm
-              `}>
-                <span className="flex items-center gap-2">
-                  <span className={`w-1.5 h-1.5 rounded-full ${isDarkMode ? 'bg-slate-500' : 'bg-slate-400'}`}></span>
-                  or continue with
-                  <span className={`w-1.5 h-1.5 rounded-full ${isDarkMode ? 'bg-slate-500' : 'bg-slate-400'}`}></span>
-                </span>
-              </span>
-            </div>
-          </div>
-
-          {/* Google Button */}
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={googleLoading}
-            className={`w-full flex items-center justify-center gap-3 px-6 py-3 ${themeClasses.googleButton} border rounded-xl font-medium transition-colors duration-200 disabled:opacity-50 shadow-lg`}
-          >
-            {googleLoading ? (
-              <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <GoogleIcon />
-            )}
-            <span>{activeTab === 'signup' ? 'Sign up with Google' : 'Sign in with Google'}</span>
-          </button>
+              {/* Google Button */}
+              <button
+                onClick={handleGoogleSignIn}
+                disabled={googleLoading}
+                className={`w-full flex items-center justify-center gap-3 px-6 py-3 ${themeClasses.googleButton} border rounded-xl font-medium transition-colors duration-200 disabled:opacity-50 shadow-lg`}
+              >
+                {googleLoading ? (
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <GoogleIcon />
+                )}
+                <span>{activeTab === 'signup' ? 'Sign up with Google' : 'Sign in with Google'}</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Footer - Center aligned */}
