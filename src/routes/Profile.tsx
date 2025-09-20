@@ -1,5 +1,5 @@
 // src/routes/Profile.tsx
-import React, { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useAuth } from '../context/AuthProvider'
 import { supabase } from '../supabaseClient'
 import gsap from 'gsap'
