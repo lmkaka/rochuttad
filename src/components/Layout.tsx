@@ -36,11 +36,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
 
-  // Check if user is admin
   const isAdmin = session && (
-    session.user?.email === 'tvradar567@gmail.com' || 
-    profile?.is_admin === true
-  );
+  session.user?.email === 'tvradar567@gmail.com' || 
+  (profile as any)?.is_admin === true
+);
 
   // Check if we should show user icons
   const shouldShowUserIcons = session && (
@@ -48,9 +47,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     location.pathname === '/admin' ||
     location.pathname === '/profile'
   );
-
-  // ⭐ SHOW DISCLAIMER ON ALL PAGES INCLUDING AUTH
-  const shouldShowDisclaimer = true;
 
   // --- Global Theme Handling ---
   const toggleTheme = useCallback(() => {
