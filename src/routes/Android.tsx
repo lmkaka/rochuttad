@@ -1,80 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-
-declare global {
-  interface Window {
-    shaka: any;
-    player: any;
-  }
-}
+import React from 'react';
 
 const Android: React.FC = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const manifestUri = "https://sundirectgo-live.pc.cdn.bitgravity.com/hd38/dth.mpd";
-
-    const initPlayer = async () => {
-      if (!window.shaka || !videoRef.current) return;
-
-      // Install polyfills
-      window.shaka.polyfill.installAll();
-      
-      // Check browser support
-      if (!window.shaka.Player.isBrowserSupported()) {
-        console.error('Browser not supported!');
-        return;
-      }
-
-      try {
-        // Create player directly without UI
-        const player = new window.shaka.Player(videoRef.current);
-        window.player = player;
-
-        // Configure DRM
-        player.configure({
-          drm: {
-            clearKeys: {
-              "5e833f4019554aa394ff6de2eb19bf78": "f60e08a145804890492f315b61789ac5"
-            }
-          },
-          abr: {
-            enabled: true
-          }
-        });
-
-        // Error handling
-        player.addEventListener('error', (errorEvent: any) => {
-          console.error('Player Error:', errorEvent.detail);
-        });
-
-        // Load manifest
-        await player.load(manifestUri);
-        console.log('Stream loaded successfully');
-
-        // Auto-select 576p
-        const tracks = player.getVariantTracks();
-        const track576 = tracks.find((t: any) => t.height === 576);
-        if (track576) {
-          await player.selectVariantTrack(track576, true);
-          console.log("576p selected by default");
-        }
-
-      } catch (error) {
-        console.error('Failed to initialize player:', error);
-      }
-    };
-
-    // Wait for Shaka to load
-    const timer = setTimeout(initPlayer, 1000);
-    
-    return () => {
-      clearTimeout(timer);
-      if (window.player) {
-        window.player.destroy();
-      }
-    };
-  }, []);
-
   return (
     <div
       style={{
@@ -82,9 +8,6 @@ const Android: React.FC = () => {
         background: '#000',
         height: '100vh',
         width: '100vw',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
         position: 'relative'
       }}
     >
@@ -101,17 +24,19 @@ const Android: React.FC = () => {
         }}
       />
       
-      <video 
-        ref={videoRef}
-        controls
-        autoPlay 
-        muted 
-        playsInline
-        style={{ 
-          width: '100%', 
+      <iframe
+        src="https://cricketstan.github.io/Channel-14/"
+        style={{
+          width: '100%',
           height: '100%',
-          backgroundColor: '#000'
+          border: 'none',
+          background: '#000'
         }}
+        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+        allowFullScreen
+        title="Cricket Stream Channel 14"
+        referrerPolicy="no-referrer"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-pointer-lock allow-top-navigation"
       />
     </div>
   );
