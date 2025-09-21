@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { formatMatchTime } from '../utils/format'
 import { pickLink } from '../utils/linkPicker'
 import gsap from 'gsap'
@@ -22,7 +21,6 @@ type Props = {
 
 export default function MatchCard({ match, device, language, index }: Props) {
   const cardRef = useRef<HTMLDivElement>(null)
-  const navigate = useNavigate()
   const [isDarkMode, setIsDarkMode] = useState(globalTheme.isDarkMode)
 
   useEffect(() => {
@@ -76,26 +74,20 @@ export default function MatchCard({ match, device, language, index }: Props) {
     }
   }, [index])
 
-  // Handle watch button click with stream access
+  // Direct external link navigation - user preference based
   const handleWatchClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     
-    if (isLive && link) {
-      // Grant stream access and navigate to stream
-      sessionStorage.setItem('streamAccessAllowed', 'true')
-      sessionStorage.setItem('streamAccessTime', Date.now().toString())
-      sessionStorage.setItem('selectedMatchId', match.id.toString())
-      sessionStorage.setItem('streamLink', link)
-      
-      // Navigate to stream page
-      navigate('/stream')
+    if (link) {
+      // Direct navigation to database assigned link
+      window.open(link, '_blank', 'noopener,noreferrer')
     }
   }
 
-  // Handle card click - external link
+  // Handle card click - same external link
   const handleCardClick = () => {
-    if (isLive && link) {
-      window.open(link, '_blank')
+    if (link) {
+      window.open(link, '_blank', 'noopener,noreferrer')
     }
   }
 
@@ -137,7 +129,7 @@ export default function MatchCard({ match, device, language, index }: Props) {
     }
   }
 
-  // Action button with proper stream access
+  // Updated action button - direct external navigation
   const getActionButton = () => {
     if (isLive && link) {
       return (
@@ -239,6 +231,7 @@ export default function MatchCard({ match, device, language, index }: Props) {
       `}
       onClick={handleCardClick}
     >
+      {/* Rest of your mobile and desktop layout remains same */}
       {/* Mobile Layout */}
       <div className="block md:hidden p-4">
         {/* Header - Status & Time */}
