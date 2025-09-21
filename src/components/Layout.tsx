@@ -16,7 +16,6 @@ import {
   Cog6ToothIcon,
   Bars3Icon
 } from '@heroicons/react/24/solid';
-
 import { 
   InformationCircleIcon,
   ShieldCheckIcon,
@@ -37,18 +36,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
 
- const isAdmin = session && (
-  session.user?.email === 'tvradar567@gmail.com' ||
-  session.user?.email === 'methodsomp@gmail.com' ||
-  (profile as any)?.is_admin === true
-);
+  const isAdmin = session && (
+    session.user?.email === 'tvradar567@gmail.com' ||
+    session.user?.email === 'methodsomp@gmail.com' ||
+    (profile as any)?.is_admin === true
+  );
 
-
-  // Check if we should show user icons
+  // **UPDATED: Check if we should show user icons - ADDED /stream route**
   const shouldShowUserIcons = session && (
     location.pathname === '/dashboard' || 
     location.pathname === '/admin' ||
-    location.pathname === '/profile'
+    location.pathname === '/profile' ||
+    location.pathname === '/stream'  // ✅ ADDED STREAM ROUTE
   );
 
   // --- Global Theme Handling ---
