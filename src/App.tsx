@@ -11,7 +11,7 @@ import Profile from './routes/Profile'
 import Test from './routes/Test'
 import Android from './routes/Android'
 import Ios from './routes/Ios'
-import stream from './stream
+import stream from './stream'
 import Layout from './components/Layout'
 import { useAuth } from './context/AuthProvider'
 
