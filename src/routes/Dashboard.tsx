@@ -268,10 +268,7 @@ export default function Dashboard() {
                   onClick={handleStreamAccess}
                   className={`${themeClasses.streamButton} text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 flex items-center gap-2 text-sm font-medium shadow-lg`}
                 >
-                  <TvIcon className="h-4 w-4" />
-                  Live Stream
-                </button>
-                
+            
                 {/* Refresh Button */}
                 <button 
                   onClick={handleRefresh}
