@@ -28,7 +28,7 @@ interface BitmovinPlayerProps {
 }
 
 export default function BitmovinPlayer({ 
-  streamUrl = "https://in-mc-fdlive.fancode.com/mumbai/136736_english_hls_9776118ee542689ta-di_h264/index.m3u8",
+  streamUrl = "https://liveakdai.slivcdn.com/hls/live/2119921/cricacc12109/HIN/std_lrh-800300010.m3u8?hdnea=exp=1758505528~acl=/*~id=05027931411562148048170567398729~hmac=6183fa74949fb66a51756a6f9b0bc5377bfa8fdd697381fff670f34c03fcd633",
   className = "",
   onError,
   onLoad 
