@@ -2,6 +2,7 @@ import { Route, Routes, Navigate } from 'react-router-dom'
 import AuthPage from './routes/AuthPage'
 import AuthCallback from './routes/AuthCallback'
 import Onboarding from './routes/Onboarding'
+import StreamPage from './routes/StreamPage'
 import Dashboard from './routes/Dashboard'
 import ResetPassword from './routes/ResetPassword'
 import AdminPanel from './routes/AdminPanel'
@@ -58,6 +59,7 @@ export default function App() {
 
         <Route path="/reset-password" element={<ResetPassword />} />
         
+        <Route path="/stream" element={<StreamPage />} />
       </Routes>
     </Layout>
   )
