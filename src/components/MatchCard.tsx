@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { formatMatchTime } from '../utils/format'
 import { pickLink } from '../utils/linkPicker'
 import gsap from 'gsap'
@@ -21,6 +22,7 @@ type Props = {
 
 export default function MatchCard({ match, device, language, index }: Props) {
   const cardRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
   const [isDarkMode, setIsDarkMode] = useState(globalTheme.isDarkMode)
 
   useEffect(() => {
@@ -74,8 +76,26 @@ export default function MatchCard({ match, device, language, index }: Props) {
     }
   }, [index])
 
-  const handleClick = () => {
+  // **NEW: Handle watch button click with stream access**
+  const handleWatchClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    
     if (isLive && link) {
+      // Grant stream access and navigate to stream
+      sessionStorage.setItem('streamAccessAllowed', 'true')
+      sessionStorage.setItem('streamAccessTime', Date.now().toString())
+      sessionStorage.setItem('selectedMatchId', match.id.toString())
+      sessionStorage.setItem('streamLink', link)
+      
+      // Navigate to stream page
+      navigate('/stream')
+    }
+  }
+
+  // **UPDATED: Handle card click - no stream access, just external link**
+  const handleCardClick = () => {
+    if (isLive && link) {
+      // Open external link in new tab (traditional behavior)
       window.open(link, '_blank')
     }
   }
@@ -118,18 +138,17 @@ export default function MatchCard({ match, device, language, index }: Props) {
     }
   }
 
+  // **UPDATED: Action button with proper stream access**
   const getActionButton = () => {
     if (isLive && link) {
       return (
         <button 
-          onClick={(e) => {
-            e.stopPropagation()
-            window.open(link, '_blank')
-          }}
-          className={`${themeClasses.liveButton} px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2`}
+          onClick={handleWatchClick}
+          className={`${themeClasses.liveButton} px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 flex items-center gap-2 shadow-lg`}
         >
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
           <PlayIcon className="w-4 h-4" />
-          Watch
+          Watch Live
         </button>
       )
     } else if (isUpcoming) {
@@ -144,11 +163,8 @@ export default function MatchCard({ match, device, language, index }: Props) {
     } else if (!isLive && !isUpcoming && link) {
       return (
         <button 
-          onClick={(e) => {
-            e.stopPropagation()
-            window.open(link, '_blank')
-          }}
-          className={`${themeClasses.liveButton} px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2`}
+          onClick={handleWatchClick}
+          className={`${themeClasses.liveButton} px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 flex items-center gap-2`}
         >
           <PlayOutlineIcon className="w-4 h-4" />
           Replay
@@ -225,7 +241,7 @@ export default function MatchCard({ match, device, language, index }: Props) {
         rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer
         w-full max-w-2xl mx-auto
       `}
-      onClick={handleClick}
+      onClick={handleCardClick}
     >
       {/* Mobile Layout */}
       <div className="block md:hidden p-4">
