@@ -3,11 +3,11 @@ import AuthPage from './routes/AuthPage'
 import AuthCallback from './routes/AuthCallback'
 import Onboarding from './routes/Onboarding'
 import Dashboard from './routes/Dashboard'
+import ResetPassword from './routes/ResetPassword'
 import AdminPanel from './routes/AdminPanel'
 import Profile from './routes/Profile'
 import Layout from './components/Layout'
 import { useAuth } from './context/AuthProvider'
-
 export default function App() {
   const { session, profile } = useAuth()
 
@@ -55,6 +55,9 @@ export default function App() {
           path="*" 
           element={<Navigate to="/dashboard" />} 
         />
+
+        <Route path="/reset-password" element={<ResetPassword />} />
+        
       </Routes>
     </Layout>
   )
