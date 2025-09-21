@@ -211,6 +211,24 @@ export default function AuthPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  // Smart redirect URL detection
+  const getRedirectUrl = useCallback(() => {
+    const hostname = window.location.hostname
+    const origin = window.location.origin
+    
+    console.log('Current hostname:', hostname)
+    console.log('Current origin:', origin)
+    
+    // Production domains
+    if (hostname.includes('watchwithradar.live') || 
+        hostname.includes('onrender.com')) {
+      return `${origin}/dashboard`
+    }
+    
+    // Local development
+    return 'http://localhost:5173/dashboard'
+  }, [])
+
   // Optimized theme classes
   const themeClasses = useMemo(() => isDarkMode ? {
     bg: 'bg-slate-900',
@@ -250,6 +268,17 @@ export default function AuthPage() {
     return () => window.removeEventListener('themeChange', handleThemeChange as EventListener)
   }, [])
 
+  // Debug current environment
+  useEffect(() => {
+    console.log('Auth Debug:', {
+      hostname: window.location.hostname,
+      origin: window.location.origin,
+      redirectUrl: getRedirectUrl(),
+      session: !!session,
+      profile: !!profile
+    })
+  }, [getRedirectUrl, session, profile])
+
   // Clear form when switching tabs
   const handleTabSwitch = useCallback((tab: 'signin' | 'signup' | 'forgot') => {
     setActiveTab(tab)
@@ -284,7 +313,7 @@ export default function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
-          options: { emailRedirectTo: `${window.location.origin}/dashboard` }
+          options: { emailRedirectTo: getRedirectUrl() }
         })
         
         if (error) throw error
@@ -305,6 +334,7 @@ export default function AuthPage() {
         setSuccess('Signed in successfully!')
       }
     } catch (err: any) {
+      console.error('Email auth error:', err)
       setError(err.message || 'An error occurred')
     } finally {
       setLoading(false)
@@ -328,22 +358,26 @@ export default function AuthPage() {
       setSuccess('Password reset link sent to your email!')
       setFormData({ email: '', password: '', confirmPassword: '' })
     } catch (err: any) {
+      console.error('Forgot password error:', err)
       setError(err.message || 'Failed to send reset email')
     } finally {
       setForgotLoading(false)
     }
   }
 
-  // Optimized Google Sign In with Popup
+  // Enhanced Google Sign In with better error handling
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true)
     setError('')
     
     try {
+      const redirectUrl = getRedirectUrl()
+      console.log('Google OAuth redirect URL:', redirectUrl)
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -351,9 +385,14 @@ export default function AuthPage() {
         }
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('Google OAuth error:', error)
+        throw error
+      }
 
       if (data?.url) {
+        console.log('Opening Google OAuth popup:', data.url)
+        
         const popup = window.open(
           data.url,
           'google-signin',
@@ -366,7 +405,9 @@ export default function AuthPage() {
             clearInterval(checkClosed)
             setGoogleLoading(false)
             
+            // Check session after popup closes
             supabase.auth.getSession().then(({ data: { session } }) => {
+              console.log('Session after popup close:', !!session)
               if (session) {
                 setSuccess('Successfully signed in with Google!')
               } else {
@@ -378,6 +419,7 @@ export default function AuthPage() {
 
         const { data: authListener } = supabase.auth.onAuthStateChange(
           (event, session) => {
+            console.log('Auth state change:', event, !!session)
             if (event === 'SIGNED_IN' && session) {
               popup?.close()
               clearInterval(checkClosed)
@@ -387,6 +429,7 @@ export default function AuthPage() {
           }
         )
 
+        // Cleanup timeout
         setTimeout(() => {
           authListener?.subscription?.unsubscribe()
           if (popup && !popup.closed) {
@@ -394,9 +437,10 @@ export default function AuthPage() {
             setGoogleLoading(false)
             setError('Google sign-in timed out.')
           }
-        }, 300000)
+        }, 300000) // 5 minutes timeout
       }
     } catch (err: any) {
+      console.error('Google sign in failed:', err)
       setError(err.message || 'Google sign in failed')
       setGoogleLoading(false)
     }
@@ -404,6 +448,7 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (session?.user && !loading && !googleLoading) {
+      console.log('Redirecting user:', { session: !!session, profile: !!profile })
       navigate(profile ? '/dashboard' : '/onboarding', { replace: true })
     }
   }, [session, profile, navigate, loading, googleLoading])
