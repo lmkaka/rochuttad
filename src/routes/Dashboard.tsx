@@ -59,29 +59,29 @@ export default function Dashboard() {
     return () => window.removeEventListener('themeChange', handleThemeChange as EventListener)
   }, [])
 
-  // **UPDATED: Enhanced theme classes with transparency for parallax background**
+  // Enhanced theme classes with transparency for parallax background
   const themeClasses = useMemo(() => isDarkMode ? {
-    bg: 'bg-transparent', // ✅ Changed from bg-slate-900 to transparent
-    surface: 'bg-slate-800/70 backdrop-blur-xl', // ✅ Added backdrop-blur for glass effect
-    card: 'bg-slate-800/60 backdrop-blur-lg', // ✅ Enhanced transparency + blur
+    bg: 'bg-transparent',
+    surface: 'bg-slate-800/70 backdrop-blur-xl',
+    card: 'bg-slate-800/60 backdrop-blur-lg',
     text: 'text-slate-100',
     textSecondary: 'text-slate-300',
     textMuted: 'text-slate-400',
-    border: 'border-slate-700/30', // ✅ More transparent borders
+    border: 'border-slate-700/30',
     accent: 'text-blue-400',
-    button: 'bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm', // ✅ Semi-transparent buttons
-    glass: 'bg-slate-800/40 backdrop-blur-2xl border-slate-700/20' // ✅ New glass effect class
+    button: 'bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm',
+    glass: 'bg-slate-800/40 backdrop-blur-2xl border-slate-700/20'
   } : {
-    bg: 'bg-transparent', // ✅ Changed from bg-gray-50 to transparent
-    surface: 'bg-white/80 backdrop-blur-xl', // ✅ Added backdrop-blur for glass effect
-    card: 'bg-white/70 backdrop-blur-lg', // ✅ Enhanced transparency + blur
+    bg: 'bg-transparent',
+    surface: 'bg-white/80 backdrop-blur-xl',
+    card: 'bg-white/70 backdrop-blur-lg',
     text: 'text-gray-900',
     textSecondary: 'text-gray-700',
     textMuted: 'text-gray-500',
-    border: 'border-gray-200/40', // ✅ More transparent borders
+    border: 'border-gray-200/40',
     accent: 'text-blue-600',
-    button: 'bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm', // ✅ Semi-transparent buttons
-    glass: 'bg-white/50 backdrop-blur-2xl border-gray-200/30' // ✅ New glass effect class
+    button: 'bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm',
+    glass: 'bg-white/50 backdrop-blur-2xl border-gray-200/30'
   }, [isDarkMode])
 
   // Optimized stats calculation with useMemo
@@ -168,7 +168,7 @@ export default function Dashboard() {
     }
   }, [fetchMatches])
 
-  // **ENHANCED: Parallax-aware animations**
+  // Parallax-aware animations
   useGSAP(() => {
     if (!containerRef.current || !heroRef.current || !statsRef.current || !gridRef.current) return
     
@@ -218,7 +218,7 @@ export default function Dashboard() {
     }
   }, [refreshing, fetchMatches])
 
-  // **UPDATED: Enhanced skeleton loader with glass effect**
+  // Enhanced skeleton loader with glass effect
   const SkeletonLoader = useMemo(() => (
     <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }, (_, i) => (
@@ -243,14 +243,13 @@ export default function Dashboard() {
   ), [themeClasses])
 
   return (
-    {/* **UPDATED: Transparent container to show parallax background** */}
     <div className={`min-h-screen ${themeClasses.bg} transition-all duration-500 relative`}>
-      {/* **NEW: Subtle overlay for better readability** */}
+      {/* Subtle overlay for better readability */}
       <div className={`absolute inset-0 ${isDarkMode ? 'bg-slate-900/20' : 'bg-white/10'} pointer-events-none`} />
       
       <div ref={containerRef} className="relative z-10 max-w-7xl mx-auto px-4 py-6 space-y-8">
         
-        {/* **UPDATED: Enhanced header with glass effect** */}
+        {/* Enhanced header with glass effect */}
         <div ref={heroRef}>
           <div className={`${themeClasses.surface} ${themeClasses.border} border-2 rounded-3xl p-6 shadow-2xl`}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -268,7 +267,7 @@ export default function Dashboard() {
                 </div>
               </div>
               
-              {/* **UPDATED: Enhanced refresh button** */}
+              {/* Enhanced refresh button */}
               <div className="flex items-center gap-3">
                 <button 
                   onClick={handleRefresh}
@@ -283,7 +282,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* **UPDATED: Enhanced stats grid with glass effect** */}
+        {/* Enhanced stats grid with glass effect */}
         <div ref={statsRef} className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className={`stat-card ${themeClasses.card} ${themeClasses.border} border-2 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl shadow-xl`}>
             <div className="flex items-center justify-center mb-3">
@@ -345,7 +344,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div ref={gridRef} className="space-y-8">
-            {/* **UPDATED: Enhanced section header** */}
+            {/* Enhanced section header */}
             <div className="flex items-center justify-between">
               <h2 className={`text-2xl sm:text-3xl font-bold ${themeClasses.text}`}>
                 Available Matches
@@ -357,7 +356,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* **UPDATED: Enhanced matches grid** */}
+            {/* Enhanced matches grid */}
             <div className="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
               {matches.map((match, index) => (
                 <div key={match.id} className="w-full">
