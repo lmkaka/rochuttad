@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { TvIcon, PlayIcon, BoltIcon } from '@heroicons/react/24/solid'
 import { ClockIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { globalTheme } from './AuthPage'
+import BitmovinPlayer from '../components/BitmovinPlayer'
 
 export default function StreamPage() {
   const [isDarkMode, setIsDarkMode] = useState(globalTheme.isDarkMode)
-  const [loading, setLoading] = useState(true)
   const [showTelegramModal, setShowTelegramModal] = useState(false)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [playerLoaded, setPlayerLoaded] = useState(false)
 
   useEffect(() => {
     const handleThemeChange = (event: CustomEvent) => {
@@ -16,18 +16,18 @@ export default function StreamPage() {
     
     window.addEventListener('themeChange', handleThemeChange as EventListener)
     
-    // Loading simulation
+    // Show telegram modal after player loads
     const timer = setTimeout(() => {
-      setLoading(false)
-      // Show telegram modal after stream loads
-      setTimeout(() => setShowTelegramModal(true), 2000)
-    }, 1500)
+      if (playerLoaded) {
+        setShowTelegramModal(true)
+      }
+    }, 3000)
 
     return () => {
       window.removeEventListener('themeChange', handleThemeChange as EventListener)
       clearTimeout(timer)
     }
-  }, [])
+  }, [playerLoaded])
 
   const themeClasses = {
     bg: isDarkMode ? 'bg-slate-900' : 'bg-gray-50',
@@ -35,12 +35,7 @@ export default function StreamPage() {
     text: isDarkMode ? 'text-white' : 'text-gray-900',
     textSecondary: isDarkMode ? 'text-slate-300' : 'text-gray-700',
     textMuted: isDarkMode ? 'text-slate-400' : 'text-gray-500',
-    button: isDarkMode 
-      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-      : 'bg-blue-600 hover:bg-blue-700 text-white',
-    telegramButton: isDarkMode
-      ? 'bg-blue-500 hover:bg-blue-600 text-white'
-      : 'bg-blue-500 hover:bg-blue-600 text-white',
+    telegramButton: 'bg-blue-500 hover:bg-blue-600 text-white',
     closeButton: isDarkMode
       ? 'bg-slate-700 hover:bg-slate-600 text-slate-300'
       : 'bg-gray-200 hover:bg-gray-300 text-gray-700',
@@ -52,8 +47,12 @@ export default function StreamPage() {
     setShowTelegramModal(false)
   }
 
-  const handleIframeLoad = () => {
-    setLoading(false)
+  const handlePlayerLoad = () => {
+    setPlayerLoaded(true)
+  }
+
+  const handlePlayerError = (error: any) => {
+    console.error('Player error:', error)
   }
 
   return (
@@ -96,31 +95,14 @@ export default function StreamPage() {
             </div>
           </div>
 
-          {/* Stream Content */}
+          {/* Bitmovin Player */}
           <div className="relative">
-            {/* Loading Overlay */}
-            {loading && (
-              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-10">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                  <p className="text-white text-sm">Loading stream...</p>
-                </div>
-              </div>
-            )}
-
-            {/* Stream Iframe */}
-            <div className="relative bg-black">
-              <iframe
-                ref={iframeRef}
-                src="https://www.radarxtv.site/both.html"
-                className="w-full aspect-video"
-                style={{ minHeight: '300px', height: '70vh', maxHeight: '600px' }}
-                frameBorder="0"
-                allowFullScreen
-                onLoad={handleIframeLoad}
-                title="Live Cricket Stream"
-              />
-            </div>
+            <BitmovinPlayer
+              className="w-full aspect-video"
+              style={{ minHeight: '300px', height: '70vh', maxHeight: '600px' }}
+              onLoad={handlePlayerLoad}
+              onError={handlePlayerError}
+            />
           </div>
 
           {/* Stream Footer */}
@@ -129,7 +111,7 @@ export default function StreamPage() {
               <div className="flex items-center gap-2 text-sm">
                 <CheckIcon className="w-4 h-4 text-green-500" />
                 <span className={themeClasses.textMuted}>
-                  Compatible with all devices
+                  HD Quality Stream
                 </span>
               </div>
               
@@ -148,13 +130,13 @@ export default function StreamPage() {
           <div className={`${themeClasses.cardBg} rounded-xl border p-4 text-center`}>
             <TvIcon className="w-8 h-8 text-blue-600 mx-auto mb-2" />
             <h3 className={`font-semibold ${themeClasses.text} mb-1`}>HD Quality</h3>
-            <p className={`text-sm ${themeClasses.textMuted}`}>Crystal clear streaming</p>
+            <p className={`text-sm ${themeClasses.textMuted}`}>Bitmovin Player</p>
           </div>
           
           <div className={`${themeClasses.cardBg} rounded-xl border p-4 text-center`}>
             <BoltIcon className="w-8 h-8 text-green-600 mx-auto mb-2" />
             <h3 className={`font-semibold ${themeClasses.text} mb-1`}>Live Updates</h3>
-            <p className={`text-sm ${themeClasses.textMuted}`}>Real-time coverage</p>
+            <p className={`text-sm ${themeClasses.textMuted}`}>Real-time streaming</p>
           </div>
           
           <div className={`${themeClasses.cardBg} rounded-xl border p-4 text-center`}>
@@ -165,7 +147,7 @@ export default function StreamPage() {
         </div>
       </div>
 
-      {/* Telegram Modal */}
+      {/* Telegram Modal - Same as before */}
       {showTelegramModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className={`${themeClasses.modalBg} rounded-2xl border p-6 max-w-sm w-full text-center`}>
@@ -178,7 +160,7 @@ export default function StreamPage() {
             </h3>
             
             <p className={`${themeClasses.textMuted} mb-6`}>
-              Get live updates, match highlights, and exclusive content on our Telegram channel
+              Get live updates, match highlights, and exclusive content
             </p>
             
             <div className="flex flex-col gap-3">
