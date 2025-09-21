@@ -28,7 +28,7 @@ interface BitmovinPlayerProps {
 }
 
 export default function BitmovinPlayer({ 
-  streamUrl = "https://d285kzy11wjv54.cloudfront.net/out/v1/0c63d485c6904eea88bb6f04e1b73c77/index.m3u8",
+  streamUrl = "https://dish.slivcdn.com/hls/live/2020591/TEN3HD/master_3500.m3u8",
   className = "",
   onError,
   onLoad 
