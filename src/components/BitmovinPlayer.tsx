@@ -1,47 +1,33 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
-// Bitmovin Player types
+// HLS.js types
 declare global {
   interface Window {
-    bitmovin: {
-      player: {
-        Player: new (container: HTMLElement, config: any) => {
-          load: (source: any) => Promise<void>
-          destroy: () => void
-          play: () => Promise<void>
-          pause: () => void
-          mute: () => void
-          unmute: () => void
-          isDestroyed: () => boolean
-        }
-      }
-    }
+    Hls: any
   }
 }
 
-interface BitmovinPlayerProps {
+interface HLSPlayerProps {
   streamUrl?: string
   className?: string
   onError?: (error: any) => void
   onLoad?: () => void
 }
 
-export default function BitmovinPlayer({ 
+export default function HLSPlayer({ 
   streamUrl = "https://liveakdai.slivcdn.com/hls/live/2119921/cricacc12109/HIN/std_lrh-800300010.m3u8?hdnea=exp=1758505528~acl=/*~id=05027931411562148048170567398729~hmac=6183fa74949fb66a51756a6f9b0bc5377bfa8fdd697381fff670f34c03fcd633",
   className = "",
   onError,
   onLoad 
-}: BitmovinPlayerProps) {
-  const playerRef = useRef<HTMLDivElement>(null)
-  const playerInstanceRef = useRef<any>(null)
-  const isInitializingRef = useRef(false)
+}: HLSPlayerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const hlsRef = useRef<any>(null)
   const mountedRef = useRef(true)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [scriptLoaded, setScriptLoaded] = useState(false)
 
-  // Track component mount state
   useEffect(() => {
     mountedRef.current = true
     return () => {
@@ -49,165 +35,167 @@ export default function BitmovinPlayer({
     }
   }, [])
 
-  // Safe state setter that checks if component is mounted
   const safeSetState = useCallback((setter: () => void) => {
     if (mountedRef.current) {
       setter()
     }
   }, [])
 
-  // Load Bitmovin Player script
+  // Load HLS.js script
   useEffect(() => {
-    if (window.bitmovin) {
+    if (window.Hls) {
       setScriptLoaded(true)
       return
     }
 
-    // Check if script is already loading
-    const existingScript = document.querySelector('script[src*="bitmovinplayer"]')
-    if (existingScript) {
-      existingScript.addEventListener('load', () => {
-        safeSetState(() => setScriptLoaded(true))
-      })
-      return
-    }
-
     const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/bitmovin-player@8/bitmovinplayer.js'
+    script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest'
     script.async = true
     script.onload = () => {
       safeSetState(() => setScriptLoaded(true))
     }
     script.onerror = () => {
-      safeSetState(() => setError('Failed to load Bitmovin Player'))
+      safeSetState(() => setError('Failed to load HLS.js'))
     }
     document.head.appendChild(script)
 
     return () => {
-      // Don't remove script on unmount as it may be used by other instances
+      // Script cleanup handled by browser
     }
   }, [safeSetState])
 
-  // Cleanup player function
-  const cleanupPlayer = useCallback(() => {
-    if (playerInstanceRef.current) {
-      try {
-        if (!playerInstanceRef.current.isDestroyed?.()) {
-          playerInstanceRef.current.destroy()
-        }
-      } catch (err) {
-        console.warn('Error destroying player:', err)
-      }
-      playerInstanceRef.current = null
+  const cleanupHLS = useCallback(() => {
+    if (hlsRef.current) {
+      hlsRef.current.destroy()
+      hlsRef.current = null
     }
-    isInitializingRef.current = false
   }, [])
 
-  // Initialize player function
-  const initializePlayer = useCallback(async () => {
-    if (!scriptLoaded || !playerRef.current || !mountedRef.current) return
-    
-    // Prevent multiple initializations
-    if (isInitializingRef.current) return
-    isInitializingRef.current = true
+  const initializeHLS = useCallback(async () => {
+    if (!scriptLoaded || !videoRef.current || !mountedRef.current) return
 
     try {
-      // Cleanup existing player first
-      cleanupPlayer()
-
+      cleanupHLS()
+      
       safeSetState(() => {
         setLoading(true)
         setError(null)
       })
 
-      // Small delay to ensure DOM is ready
-      await new Promise(resolve => setTimeout(resolve, 100))
+      const video = videoRef.current
       
-      if (!mountedRef.current) return
+      if (window.Hls.isSupported()) {
+        const hls = new window.Hls({
+          // CORS और performance के लिए configuration
+          xhrSetup: (xhr: XMLHttpRequest, url: string) => {
+            // Custom headers add कर सकते हैं यहाँ
+            xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
+            xhr.setRequestHeader('Access-Control-Allow-Headers', '*')
+          },
+          // Error recovery के लिए
+          enableWorker: true,
+          lowLatencyMode: true,
+          backBufferLength: 90
+        })
 
-      const playerConfig = {
-        key: '90f78acb-6226-4dc9-9ddd-7dda84143e50',
-        analytics: {
-          key: '8f54bbf3-e230-40fd-aecd-97d36a58585a',
-          videoId: "Live-Cricket",
-          title: "Live Cricket Stream"
-        },
-        playback: {
-          autoplay: true,
-          muted: false
-        },
-        style: {
-          width: "100%",
-          height: "100%"
-        },
-        ui: {
-          watermark: {
-            display: false
+        hlsRef.current = hls
+
+        // HLS events
+        hls.on(window.Hls.Events.MEDIA_ATTACHED, () => {
+          console.log('HLS: Media attached')
+        })
+
+        hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+          console.log('HLS: Manifest parsed')
+          safeSetState(() => setLoading(false))
+          onLoad?.()
+          
+          // Auto play attempt
+          video.play().catch((err) => {
+            console.log('Auto play failed:', err)
+          })
+        })
+
+        hls.on(window.Hls.Events.ERROR, (event, data) => {
+          console.error('HLS Error:', data)
+          
+          if (data.fatal) {
+            switch (data.type) {
+              case window.Hls.ErrorTypes.NETWORK_ERROR:
+                console.log('Network error - attempting recovery')
+                hls.startLoad()
+                break
+              case window.Hls.ErrorTypes.MEDIA_ERROR:
+                console.log('Media error - attempting recovery')
+                hls.recoverMediaError()
+                break
+              default:
+                safeSetState(() => {
+                  setError(`HLS Error: ${data.details}`)
+                  setLoading(false)
+                })
+                onError?.(data)
+                break
+            }
           }
-        }
-      }
+        })
 
-      const sourceConfig = {
-        hls: streamUrl,
-        title: "Live Cricket Stream"
-      }
+        // Attach media and load source
+        hls.attachMedia(video)
+        hls.loadSource(streamUrl)
 
-      if (!mountedRef.current || !playerRef.current) return
-
-      // Create new player
-      const player = new window.bitmovin.player.Player(playerRef.current, playerConfig)
-      playerInstanceRef.current = player
-
-      // Load stream only if component is still mounted
-      if (mountedRef.current) {
-        await player.load(sourceConfig)
-        
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Safari native HLS support
+        video.src = streamUrl
+        video.addEventListener('loadedmetadata', () => {
+          safeSetState(() => setLoading(false))
+          onLoad?.()
+        })
+        video.addEventListener('error', (e) => {
+          safeSetState(() => {
+            setError('Video load error')
+            setLoading(false)
+          })
+          onError?.(e)
+        })
+      } else {
         safeSetState(() => {
+          setError('HLS not supported in this browser')
           setLoading(false)
         })
-        
-        onLoad?.()
-        console.log("Bitmovin Player: Stream loaded successfully")
       }
 
     } catch (err: any) {
-      console.error("Bitmovin Player Error:", err)
-      
+      console.error('HLS initialization error:', err)
       safeSetState(() => {
-        setError(err.message || 'Failed to load stream')
+        setError(err.message || 'Failed to initialize player')
         setLoading(false)
       })
-      
       onError?.(err)
-    } finally {
-      isInitializingRef.current = false
     }
-  }, [scriptLoaded, streamUrl, onError, onLoad, safeSetState, cleanupPlayer])
+  }, [scriptLoaded, streamUrl, onError, onLoad, safeSetState, cleanupHLS])
 
-  // Initialize player when script is loaded
   useEffect(() => {
-    if (scriptLoaded && playerRef.current && mountedRef.current) {
-      initializePlayer()
+    if (scriptLoaded && videoRef.current && mountedRef.current) {
+      initializeHLS()
     }
 
-    // Cleanup on unmount or dependencies change
     return () => {
-      cleanupPlayer()
+      cleanupHLS()
     }
-  }, [scriptLoaded, initializePlayer, cleanupPlayer])
+  }, [scriptLoaded, initializeHLS, cleanupHLS])
 
   const handleRetry = useCallback(() => {
     if (mountedRef.current) {
       setError(null)
       setLoading(true)
-      // Small delay before retrying
       setTimeout(() => {
         if (mountedRef.current) {
-          initializePlayer()
+          initializeHLS()
         }
       }, 500)
     }
-  }, [initializePlayer])
+  }, [initializeHLS])
 
   if (error) {
     return (
@@ -230,7 +218,6 @@ export default function BitmovinPlayer({
 
   return (
     <div className={`relative bg-black ${className}`}>
-      {/* Loading Overlay */}
       {loading && (
         <div className="absolute inset-0 bg-black flex items-center justify-center z-10">
           <div className="text-center text-white">
@@ -240,22 +227,15 @@ export default function BitmovinPlayer({
         </div>
       )}
 
-      {/* Player Container */}
-      <div 
-        ref={playerRef} 
+      <video
+        ref={videoRef}
         className="w-full h-full"
+        controls
+        playsInline
+        muted
         style={{ minHeight: '300px' }}
       />
-
-      {/* Custom CSS for hiding watermark */}
-      <style jsx>{`
-        :global(.bmpui-ui-watermark),
-        :global(.bmpui-watermark),
-        :global([class*="watermark"]) {
-          display: none !important;
-          visibility: hidden !important;
-        }
-      `}</style>
     </div>
   )
-}
+          }
+  
