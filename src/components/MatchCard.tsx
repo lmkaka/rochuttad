@@ -48,8 +48,8 @@ export default function MatchCard({ match, device, language, index }: Props) {
     liveButton: 'bg-green-600 hover:bg-green-700 text-white',
     upcomingButton: 'bg-blue-600 hover:bg-blue-700 text-white',
     disabledButton: 'bg-slate-700 text-slate-500 cursor-not-allowed',
-    teamContainer: 'bg-slate-700/60 border-slate-600',
-    timeContainer: 'bg-slate-700/60 border-slate-600'
+    teamContainer: 'bg-slate-700/50',
+    timeContainer: 'bg-slate-700/50'
   } : {
     card: 'bg-white border-gray-200',
     text: 'text-gray-900',
@@ -61,8 +61,8 @@ export default function MatchCard({ match, device, language, index }: Props) {
     liveButton: 'bg-green-600 hover:bg-green-700 text-white',
     upcomingButton: 'bg-blue-600 hover:bg-blue-700 text-white',
     disabledButton: 'bg-gray-300 text-gray-500 cursor-not-allowed',
-    teamContainer: 'bg-slate-100 border-gray-300',
-    timeContainer: 'bg-slate-100 border-gray-300'
+    teamContainer: 'bg-gray-100',
+    timeContainer: 'bg-gray-100'
   }, [isDarkMode])
 
   const currentTime = new Date()
@@ -103,15 +103,94 @@ export default function MatchCard({ match, device, language, index }: Props) {
     }
   }
 
-  // Country codes for teams
-  const getTeamCode = (teamName: string) => {
+  const getStatusBadge = () => {
+    if (isLive) {
+      return (
+        <div className={`${themeClasses.liveBadge} px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1`}>
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          LIVE
+        </div>
+      )
+    } else if (isUpcoming) {
+      return (
+        <div className={`${themeClasses.upcomingBadge} px-2 py-1 rounded-full text-xs font-medium`}>
+          UPCOMING
+        </div>
+      )
+    } else {
+      return (
+        <div className={`${themeClasses.finishedBadge} px-2 py-1 rounded-full text-xs font-medium`}>
+          FINISHED
+        </div>
+      )
+    }
+  }
+
+  const getActionButton = () => {
+    if (isLive && link) {
+      return (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation()
+            window.open(link, '_blank')
+          }}
+          className={`${themeClasses.liveButton} px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2`}
+        >
+          <PlayIcon className="w-4 h-4" />
+          Watch
+        </button>
+      )
+    } else if (isUpcoming) {
+      return (
+        <button 
+          className={`${themeClasses.upcomingButton} px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2`}
+        >
+          <CalendarIcon className="w-4 h-4" />
+          {getTimeUntilMatch()}
+        </button>
+      )
+    } else if (!isLive && !isUpcoming && link) {
+      return (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation()
+            window.open(link, '_blank')
+          }}
+          className={`${themeClasses.liveButton} px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2`}
+        >
+          <PlayOutlineIcon className="w-4 h-4" />
+          Replay
+        </button>
+      )
+    } else {
+      return (
+        <button 
+          className={`${themeClasses.disabledButton} px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2`}
+        >
+          <ExclamationTriangleIcon className="w-4 h-4" />
+          N/A
+        </button>
+      )
+    }
+  }
+
+  // Team name truncation for mobile
+  const truncateTeamName = (name: string) => {
+    if (isMobile && name.length > 12) {
+      return name.slice(0, 12) + '...'
+    }
+    return name
+  }
+
+  // Country code from team name
+  const getCountryCode = (teamName: string) => {
     const codes: { [key: string]: string } = {
       'Pakistan': 'PAK',
       'India': 'IND',
       'Australia': 'AUS',
       'England': 'ENG',
-      'New Zealand': 'NZ',
-      'South Africa': 'SA',
+      'New Zealand': 'NZL',
+      'South Africa': 'RSA',
       'Sri Lanka': 'SL',
       'Bangladesh': 'BAN',
       'West Indies': 'WI',
@@ -120,213 +199,200 @@ export default function MatchCard({ match, device, language, index }: Props) {
     return codes[teamName] || teamName.slice(0, 3).toUpperCase()
   }
 
-  // Team flag colors
-  const getTeamColors = (teamName: string) => {
+  // Country flag colors
+  const getFlagColors = (teamName: string) => {
     const colors: { [key: string]: string } = {
       'Pakistan': 'from-green-600 to-green-800',
-      'India': 'from-orange-500 via-white to-green-600',
+      'India': 'from-orange-500 to-blue-600',
       'Australia': 'from-yellow-400 to-green-600',
-      'England': 'from-red-600 via-white to-blue-600',
-      'New Zealand': 'from-black to-white',
-      'South Africa': 'from-green-500 via-yellow-400 to-red-500',
-      'Sri Lanka': 'from-blue-600 via-yellow-400 to-red-600',
+      'England': 'from-red-600 to-blue-600',
+      'New Zealand': 'from-blue-500 to-black',
+      'South Africa': 'from-green-500 to-yellow-500',
+      'Sri Lanka': 'from-blue-500 to-orange-500',
       'Bangladesh': 'from-green-600 to-red-600',
-      'West Indies': 'from-red-600 via-yellow-400 to-blue-600',
-      'Afghanistan': 'from-black via-red-600 to-green-600'
+      'West Indies': 'from-red-600 to-yellow-500',
+      'Afghanistan': 'from-black to-red-600'
     }
-    return colors[teamName] || 'from-gray-600 to-gray-800'
+    return colors[teamName] || 'from-gray-500 to-gray-700'
   }
 
   return (
     <div 
       ref={cardRef}
-      className={`${themeClasses.card} rounded-2xl border-2 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden`}
+      className={`${themeClasses.card} rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer`}
       onClick={handleClick}
     >
+      {/* Mobile Layout */}
       {isMobile ? (
-        /* Mobile Layout - Same as before */
         <div className="p-4">
-          {/* Status & Time */}
+          {/* Header - Status & Time */}
           <div className="flex items-center justify-between mb-4">
-            <div className={`${isLive ? themeClasses.liveBadge : isUpcoming ? themeClasses.upcomingBadge : themeClasses.finishedBadge} px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5`}>
-              {isLive && <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>}
-              {isLive ? 'LIVE' : isUpcoming ? 'UPCOMING' : 'FINISHED'}
-            </div>
-            <div className={`${themeClasses.timeContainer} px-3 py-2 rounded-lg border`}>
+            {getStatusBadge()}
+            <div className={`${themeClasses.timeContainer} px-3 py-1 rounded-lg`}>
               <div className="flex items-center gap-1">
                 <ClockIcon className="w-4 h-4" />
                 <span className={`${themeClasses.text} text-sm font-medium`}>
                   {formatMatchTime(match.match_time)}
                 </span>
               </div>
+              {isUpcoming && (
+                <div className={`${themeClasses.textMuted} text-xs text-center mt-1`}>
+                  in {getTimeUntilMatch()}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Teams */}
           <div className="flex items-center gap-4 mb-4">
+            {/* Team 1 */}
             <div className="flex-1">
               <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${getTeamColors(match.team1_name)} flex items-center justify-center border-2 border-white/20 shadow-md`}>
-                  <span className="text-white font-black text-xs">
-                    {getTeamCode(match.team1_name)}
-                  </span>
-                </div>
+                {match.team1_logo ? (
+                  <img 
+                    src={match.team1_logo} 
+                    className="w-12 h-12 rounded-lg object-cover"
+                    alt={match.team1_name}
+                    onError={(e) => e.currentTarget.style.display = 'none'}
+                  />
+                ) : (
+                  <div className={`w-12 h-12 rounded-lg ${themeClasses.teamContainer} flex items-center justify-center`}>
+                    <span className={`${themeClasses.text} text-lg font-bold`}>
+                      {match.team1_name.charAt(0)}
+                    </span>
+                  </div>
+                )}
                 <div>
-                  <h3 className={`${themeClasses.text} font-bold text-sm`}>
-                    {match.team1_name.length > 10 ? match.team1_name.slice(0, 10) + '...' : match.team1_name}
+                  <h3 className={`${themeClasses.text} font-semibold text-sm leading-tight`}>
+                    {truncateTeamName(match.team1_name)}
                   </h3>
                   <p className={`${themeClasses.textMuted} text-xs`}>HOME</p>
                 </div>
               </div>
             </div>
 
-            <div className={`${themeClasses.teamContainer} px-3 py-2 rounded-lg border`}>
-              <span className={`${themeClasses.text} text-sm font-black`}>VS</span>
+            {/* VS */}
+            <div className={`${themeClasses.teamContainer} px-3 py-1 rounded-lg`}>
+              <span className={`${themeClasses.text} text-sm font-bold`}>VS</span>
             </div>
 
+            {/* Team 2 */}
             <div className="flex-1">
               <div className="flex items-center gap-3 justify-end text-right">
                 <div>
-                  <h3 className={`${themeClasses.text} font-bold text-sm`}>
-                    {match.team2_name.length > 10 ? match.team2_name.slice(0, 10) + '...' : match.team2_name}
+                  <h3 className={`${themeClasses.text} font-semibold text-sm leading-tight`}>
+                    {truncateTeamName(match.team2_name)}
                   </h3>
                   <p className={`${themeClasses.textMuted} text-xs`}>AWAY</p>
                 </div>
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${getTeamColors(match.team2_name)} flex items-center justify-center border-2 border-white/20 shadow-md`}>
-                  <span className="text-white font-black text-xs">
-                    {getTeamCode(match.team2_name)}
-                  </span>
-                </div>
+                {match.team2_logo ? (
+                  <img 
+                    src={match.team2_logo} 
+                    className="w-12 h-12 rounded-lg object-cover"
+                    alt={match.team2_name}
+                    onError={(e) => e.currentTarget.style.display = 'none'}
+                  />
+                ) : (
+                  <div className={`w-12 h-12 rounded-lg ${themeClasses.teamContainer} flex items-center justify-center`}>
+                    <span className={`${themeClasses.text} text-lg font-bold`}>
+                      {match.team2_name.charAt(0)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* Action Button */}
           <div className="flex justify-center">
-            {isLive && link ? (
-              <button className={`${themeClasses.liveButton} px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all hover:scale-105`}>
-                <PlayIcon className="w-4 h-4" />
-                Watch Live
-              </button>
-            ) : isUpcoming ? (
-              <button className={`${themeClasses.upcomingButton} px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2`}>
-                <CalendarIcon className="w-4 h-4" />
-                {getTimeUntilMatch()}
-              </button>
-            ) : (
-              <button className={`${themeClasses.disabledButton} px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2`}>
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                N/A
-              </button>
-            )}
+            {getActionButton()}
           </div>
         </div>
       ) : (
-        /* DESKTOP LAYOUT - PROPER CRICKET CARD STYLE */
-        <div className="relative">
+        /* Desktop Layout - Cricket Card Style */
+        <div className="p-4 flex items-center gap-6">
           
-          {/* Top Status Bar */}
-          <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 z-10">
-            <div className={`${isLive ? themeClasses.liveBadge : isUpcoming ? themeClasses.upcomingBadge : themeClasses.finishedBadge} px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-lg`}>
-              {isLive && <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>}
-              {isLive ? 'LIVE' : isUpcoming ? 'UPCOMING' : 'FINISHED'}
+          {/* Team 1 */}
+          <div className="flex items-center gap-3 min-w-[120px]">
+            {match.team1_logo ? (
+              <img 
+                src={match.team1_logo} 
+                className="w-12 h-12 rounded-lg object-cover border shadow-sm"
+                alt={match.team1_name}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                  e.currentTarget.nextElementSibling.style.display = 'flex'
+                }}
+              />
+            ) : null}
+            
+            {/* Country Flag Fallback */}
+            <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${getFlagColors(match.team1_name)} ${match.team1_logo ? 'hidden' : 'flex'} items-center justify-center border shadow-sm`}>
+              <span className="text-white text-xs font-black">
+                {getCountryCode(match.team1_name)}
+              </span>
             </div>
             
-            <div className={`${themeClasses.timeContainer} px-4 py-2 rounded-xl border-2 shadow-lg backdrop-blur-sm`}>
-              <div className="flex items-center gap-2">
-                <ClockIcon className="w-5 h-5 text-blue-500" />
-                <div className="text-center">
-                  <div className={`${themeClasses.text} font-bold text-lg leading-tight`}>
-                    12:45 PM
-                  </div>
-                  <div className={`${themeClasses.textMuted} text-xs font-medium`}>
-                    21 Sep
-                  </div>
-                </div>
-              </div>
+            <div className="text-center">
+              <h3 className={`${themeClasses.text} font-bold text-base leading-tight`}>
+                {getCountryCode(match.team1_name)}
+              </h3>
+              <p className={`${themeClasses.textMuted} text-xs font-medium`}>HOME</p>
             </div>
           </div>
 
-          {/* Main Content Area */}
-          <div className="pt-20 pb-6 px-8">
-            
-            {/* Teams Display */}
-            <div className="flex items-center justify-center gap-12 mb-8">
-              
-              {/* Team 1 */}
-              <div className="flex flex-col items-center space-y-4 min-w-[200px]">
-                <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${getTeamColors(match.team1_name)} flex items-center justify-center shadow-2xl border-4 border-white/30 hover:scale-105 transition-transform`}>
-                  <span className="text-white font-black text-2xl">
-                    {getTeamCode(match.team1_name)}
-                  </span>
-                </div>
-                <div className="text-center">
-                  <h2 className={`${themeClasses.text} text-2xl font-black mb-1`}>
-                    {getTeamCode(match.team1_name)}
-                  </h2>
-                  <p className={`${themeClasses.textMuted} text-sm font-bold uppercase tracking-wider`}>
-                    HOME
-                  </p>
-                </div>
-              </div>
+          {/* VS Section */}
+          <div className={`${themeClasses.teamContainer} px-4 py-2 rounded-xl border`}>
+            <span className={`${themeClasses.text} text-lg font-black`}>VS</span>
+          </div>
 
-              {/* VS Section */}
-              <div className="flex flex-col items-center">
-                <div className={`${themeClasses.teamContainer} px-8 py-4 rounded-2xl border-4 shadow-xl hover:scale-110 transition-transform`}>
-                  <span className={`${themeClasses.text} text-3xl font-black tracking-wider`}>
-                    VS
-                  </span>
-                </div>
-              </div>
-
-              {/* Team 2 */}
-              <div className="flex flex-col items-center space-y-4 min-w-[200px]">
-                <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${getTeamColors(match.team2_name)} flex items-center justify-center shadow-2xl border-4 border-white/30 hover:scale-105 transition-transform`}>
-                  <span className="text-white font-black text-2xl">
-                    {getTeamCode(match.team2_name)}
-                  </span>
-                </div>
-                <div className="text-center">
-                  <h2 className={`${themeClasses.text} text-2xl font-black mb-1`}>
-                    {getTeamCode(match.team2_name)}
-                  </h2>
-                  <p className={`${themeClasses.textMuted} text-sm font-bold uppercase tracking-wider`}>
-                    AWAY
-                  </p>
-                </div>
-              </div>
+          {/* Team 2 */}
+          <div className="flex items-center gap-3 min-w-[120px]">
+            <div className="text-center">
+              <h3 className={`${themeClasses.text} font-bold text-base leading-tight`}>
+                {getCountryCode(match.team2_name)}
+              </h3>
+              <p className={`${themeClasses.textMuted} text-xs font-medium`}>AWAY</p>
             </div>
-
-            {/* Action Button */}
-            <div className="flex justify-center">
-              {isLive && link ? (
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    window.open(link, '_blank')
-                  }}
-                  className={`${themeClasses.liveButton} px-12 py-4 rounded-2xl font-black text-lg flex items-center gap-3 shadow-2xl hover:scale-105 transition-all`}
-                >
-                  <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
-                  <PlayIcon className="w-6 h-6" />
-                  WATCH LIVE
-                </button>
-              ) : isUpcoming ? (
-                <button className={`${themeClasses.upcomingButton} px-12 py-4 rounded-2xl font-black text-lg flex items-center gap-3 shadow-2xl`}>
-                  <CalendarIcon className="w-6 h-6" />
-                  STARTS IN {getTimeUntilMatch()}
-                </button>
-              ) : (
-                <button className={`${themeClasses.disabledButton} px-12 py-4 rounded-2xl font-black text-lg flex items-center gap-3 shadow-xl`}>
-                  <ExclamationTriangleIcon className="w-6 h-6" />
-                  MATCH ENDED
-                </button>
-              )}
+            
+            {match.team2_logo ? (
+              <img 
+                src={match.team2_logo} 
+                className="w-12 h-12 rounded-lg object-cover border shadow-sm"
+                alt={match.team2_name}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                  e.currentTarget.nextElementSibling.style.display = 'flex'
+                }}
+              />
+            ) : null}
+            
+            {/* Country Flag Fallback */}
+            <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${getFlagColors(match.team2_name)} ${match.team2_logo ? 'hidden' : 'flex'} items-center justify-center border shadow-sm`}>
+              <span className="text-white text-xs font-black">
+                {getCountryCode(match.team2_name)}
+              </span>
             </div>
           </div>
 
-          {/* Bottom Gradient Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+          {/* Time Section */}
+          <div className={`${themeClasses.timeContainer} px-4 py-2 rounded-xl border flex items-center gap-2 min-w-[140px]`}>
+            <ClockIcon className="w-4 h-4 text-blue-500" />
+            <div className="text-center">
+              <span className={`${themeClasses.text} text-sm font-bold block leading-none`}>
+                {formatMatchTime(match.match_time).split(',')[1]?.trim() || '12:45 PM'}
+              </span>
+              <span className={`${themeClasses.textMuted} text-xs block leading-none mt-0.5`}>
+                {formatMatchTime(match.match_time).split(',')[0]?.trim() || '21 Sep'}
+              </span>
+            </div>
+          </div>
+
+          {/* Status & Action */}
+          <div className="flex items-center gap-3 ml-auto">
+            {getStatusBadge()}
+            {getActionButton()}
+          </div>
         </div>
       )}
     </div>
