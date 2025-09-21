@@ -59,27 +59,29 @@ export default function Dashboard() {
     return () => window.removeEventListener('themeChange', handleThemeChange as EventListener)
   }, [])
 
-  // Memoized theme classes for better performance
+  // **UPDATED: Enhanced theme classes with transparency for parallax background**
   const themeClasses = useMemo(() => isDarkMode ? {
-    bg: 'bg-slate-900',
-    surface: 'bg-slate-800/50',
-    card: 'bg-slate-800/30',
+    bg: 'bg-transparent', // ✅ Changed from bg-slate-900 to transparent
+    surface: 'bg-slate-800/70 backdrop-blur-xl', // ✅ Added backdrop-blur for glass effect
+    card: 'bg-slate-800/60 backdrop-blur-lg', // ✅ Enhanced transparency + blur
     text: 'text-slate-100',
     textSecondary: 'text-slate-300',
     textMuted: 'text-slate-400',
-    border: 'border-slate-700/50',
+    border: 'border-slate-700/30', // ✅ More transparent borders
     accent: 'text-blue-400',
-    button: 'bg-blue-600 hover:bg-blue-700'
+    button: 'bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm', // ✅ Semi-transparent buttons
+    glass: 'bg-slate-800/40 backdrop-blur-2xl border-slate-700/20' // ✅ New glass effect class
   } : {
-    bg: 'bg-gray-50',
-    surface: 'bg-white/80',
-    card: 'bg-white/60',
+    bg: 'bg-transparent', // ✅ Changed from bg-gray-50 to transparent
+    surface: 'bg-white/80 backdrop-blur-xl', // ✅ Added backdrop-blur for glass effect
+    card: 'bg-white/70 backdrop-blur-lg', // ✅ Enhanced transparency + blur
     text: 'text-gray-900',
     textSecondary: 'text-gray-700',
     textMuted: 'text-gray-500',
-    border: 'border-gray-200/60',
+    border: 'border-gray-200/40', // ✅ More transparent borders
     accent: 'text-blue-600',
-    button: 'bg-blue-600 hover:bg-blue-700'
+    button: 'bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm', // ✅ Semi-transparent buttons
+    glass: 'bg-white/50 backdrop-blur-2xl border-gray-200/30' // ✅ New glass effect class
   }, [isDarkMode])
 
   // Optimized stats calculation with useMemo
@@ -166,7 +168,7 @@ export default function Dashboard() {
     }
   }, [fetchMatches])
 
-  // Optimized animations with reduced motion check
+  // **ENHANCED: Parallax-aware animations**
   useGSAP(() => {
     if (!containerRef.current || !heroRef.current || !statsRef.current || !gridRef.current) return
     
@@ -174,24 +176,35 @@ export default function Dashboard() {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     
     if (prefersReducedMotion) {
-      // Skip animations for users who prefer reduced motion
       return
     }
     
     const tl = gsap.timeline()
     
+    // Enhanced entrance animations with parallax consideration
     tl.fromTo(heroRef.current, 
-      { opacity: 0, y: 20 }, 
-      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+      { opacity: 0, y: 30, scale: 0.95 }, 
+      { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'power2.out' }
     )
     .fromTo(statsRef.current, 
-      { opacity: 0, y: 15 }, 
-      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.2'
+      { opacity: 0, y: 20, rotationX: -15 }, 
+      { opacity: 1, y: 0, rotationX: 0, duration: 0.5, ease: 'power2.out' }, '-=0.3'
     )
     .fromTo(gridRef.current, 
-      { opacity: 0, y: 15 }, 
-      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.2'
+      { opacity: 0, y: 25 }, 
+      { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, '-=0.2'
     )
+    
+    // Add subtle floating animation to stats cards
+    gsap.to('.stat-card', {
+      y: '+=5',
+      duration: 2,
+      ease: 'power2.inOut',
+      repeat: -1,
+      yoyo: true,
+      stagger: 0.2
+    })
+
   }, [loading])
 
   // User preferences
@@ -205,24 +218,24 @@ export default function Dashboard() {
     }
   }, [refreshing, fetchMatches])
 
-  // Memoized skeleton loader
+  // **UPDATED: Enhanced skeleton loader with glass effect**
   const SkeletonLoader = useMemo(() => (
     <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }, (_, i) => (
         <div 
           key={i} 
-          className={`${themeClasses.card} rounded-2xl h-[200px] border ${themeClasses.border} animate-pulse backdrop-blur-sm`}
+          className={`${themeClasses.glass} rounded-2xl h-[350px] border ${themeClasses.border} animate-pulse shadow-xl`}
         >
-          <div className="p-4 space-y-4">
+          <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gray-300 rounded-full" />
-              <div className="w-16 h-6 bg-gray-300 rounded" />
+              <div className="w-16 h-16 bg-gray-300/50 rounded-2xl" />
+              <div className="w-20 h-8 bg-gray-300/50 rounded-lg" />
             </div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-300 rounded" />
-              <div className="h-4 bg-gray-300 rounded w-3/4" />
+            <div className="space-y-3 text-center">
+              <div className="h-6 bg-gray-300/50 rounded mx-auto w-24" />
+              <div className="h-4 bg-gray-300/50 rounded mx-auto w-16" />
             </div>
-            <div className="h-8 bg-gray-300 rounded" />
+            <div className="h-12 bg-gray-300/50 rounded-xl" />
           </div>
         </div>
       ))}
@@ -230,35 +243,39 @@ export default function Dashboard() {
   ), [themeClasses])
 
   return (
-    <div className={`min-h-screen ${themeClasses.bg} transition-colors duration-300`}>
-      <div ref={containerRef} className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    {/* **UPDATED: Transparent container to show parallax background** */}
+    <div className={`min-h-screen ${themeClasses.bg} transition-all duration-500 relative`}>
+      {/* **NEW: Subtle overlay for better readability** */}
+      <div className={`absolute inset-0 ${isDarkMode ? 'bg-slate-900/20' : 'bg-white/10'} pointer-events-none`} />
+      
+      <div ref={containerRef} className="relative z-10 max-w-7xl mx-auto px-4 py-6 space-y-8">
         
-        {/* Enhanced Header - Removed Live Stream Button */}
+        {/* **UPDATED: Enhanced header with glass effect** */}
         <div ref={heroRef}>
-          <div className={`${themeClasses.surface} ${themeClasses.border} border rounded-2xl backdrop-blur-sm p-4 sm:p-6`}>
+          <div className={`${themeClasses.surface} ${themeClasses.border} border-2 rounded-3xl p-6 shadow-2xl`}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-blue-600 shadow-lg">
-                  <PlayIcon className="h-6 w-6 text-white" />
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-xl">
+                  <PlayIcon className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                  <h1 className={`text-2xl sm:text-3xl font-bold ${themeClasses.text}`}>
+                  <h1 className={`text-3xl sm:text-4xl font-bold ${themeClasses.text} mb-1`}>
                     Cricket Matches
                   </h1>
-                  <p className={`text-sm ${themeClasses.textMuted} mt-1`}>
+                  <p className={`text-sm ${themeClasses.textMuted}`}>
                     Live streaming and updates • Welcome, {profile?.name}
                   </p>
                 </div>
               </div>
               
-              {/* Only Refresh Button */}
+              {/* **UPDATED: Enhanced refresh button** */}
               <div className="flex items-center gap-3">
                 <button 
                   onClick={handleRefresh}
                   disabled={refreshing}
-                  className={`${themeClasses.button} text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2 text-sm font-medium`}
+                  className={`${themeClasses.button} text-white px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2 text-sm font-semibold shadow-lg`}
                 >
-                  <ArrowPathIcon className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                  <ArrowPathIcon className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
                   {refreshing ? 'Refreshing...' : 'Refresh'}
                 </button>
               </div>
@@ -266,38 +283,38 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Optimized Stats Grid */}
-        <div ref={statsRef} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center transition-all duration-200 hover:scale-105`}>
-            <div className="flex items-center justify-center mb-2">
-              <ChartBarIcon className="h-8 w-8 text-blue-600" />
+        {/* **UPDATED: Enhanced stats grid with glass effect** */}
+        <div ref={statsRef} className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className={`stat-card ${themeClasses.card} ${themeClasses.border} border-2 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl shadow-xl`}>
+            <div className="flex items-center justify-center mb-3">
+              <ChartBarIcon className="h-10 w-10 text-blue-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-bold text-blue-600">{matchStats.total}</div>
-            <div className={`text-xs ${themeClasses.textMuted} font-medium`}>Total</div>
+            <div className="text-2xl sm:text-3xl font-black text-blue-600 mb-1">{matchStats.total}</div>
+            <div className={`text-sm ${themeClasses.textMuted} font-semibold uppercase tracking-wider`}>Total</div>
           </div>
           
-          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center transition-all duration-200 hover:scale-105`}>
-            <div className="flex items-center justify-center mb-2">
-              <ClockIcon className="h-8 w-8 text-green-600" />
+          <div className={`stat-card ${themeClasses.card} ${themeClasses.border} border-2 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl shadow-xl`}>
+            <div className="flex items-center justify-center mb-3">
+              <ClockIcon className="h-10 w-10 text-green-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-bold text-green-600">{matchStats.upcoming}</div>
-            <div className={`text-xs ${themeClasses.textMuted} font-medium`}>Upcoming</div>
+            <div className="text-2xl sm:text-3xl font-black text-green-600 mb-1">{matchStats.upcoming}</div>
+            <div className={`text-sm ${themeClasses.textMuted} font-semibold uppercase tracking-wider`}>Upcoming</div>
           </div>
           
-          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center transition-all duration-200 hover:scale-105`}>
-            <div className="flex items-center justify-center mb-2">
-              <TvIcon className="h-8 w-8 text-red-600" />
+          <div className={`stat-card ${themeClasses.card} ${themeClasses.border} border-2 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl shadow-xl`}>
+            <div className="flex items-center justify-center mb-3">
+              <TvIcon className="h-10 w-10 text-red-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-bold text-red-600">{matchStats.live}</div>
-            <div className={`text-xs ${themeClasses.textMuted} font-medium`}>Live</div>
+            <div className="text-2xl sm:text-3xl font-black text-red-600 mb-1">{matchStats.live}</div>
+            <div className={`text-sm ${themeClasses.textMuted} font-semibold uppercase tracking-wider`}>Live</div>
           </div>
           
-          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center transition-all duration-200 hover:scale-105`}>
-            <div className="flex items-center justify-center mb-2">
-              <FireIcon className="h-8 w-8 text-purple-600" />
+          <div className={`stat-card ${themeClasses.card} ${themeClasses.border} border-2 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl shadow-xl`}>
+            <div className="flex items-center justify-center mb-3">
+              <FireIcon className="h-10 w-10 text-purple-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-bold text-purple-600">{matchStats.today}</div>
-            <div className={`text-xs ${themeClasses.textMuted} font-medium`}>Today</div>
+            <div className="text-2xl sm:text-3xl font-black text-purple-600 mb-1">{matchStats.today}</div>
+            <div className={`text-sm ${themeClasses.textMuted} font-semibold uppercase tracking-wider`}>Today</div>
           </div>
         </div>
 
@@ -307,19 +324,19 @@ export default function Dashboard() {
             {SkeletonLoader}
           </div>
         ) : matches.length === 0 ? (
-          <div ref={gridRef} className="text-center py-12">
-            <div className={`${themeClasses.surface} ${themeClasses.border} border rounded-2xl backdrop-blur-sm p-8 max-w-md mx-auto`}>
-              <div className="flex items-center justify-center mb-4">
-                <TvIcon className="h-16 w-16 text-gray-400" />
+          <div ref={gridRef} className="text-center py-16">
+            <div className={`${themeClasses.surface} ${themeClasses.border} border-2 rounded-3xl p-12 max-w-md mx-auto shadow-2xl`}>
+              <div className="flex items-center justify-center mb-6">
+                <TvIcon className="h-20 w-20 text-gray-400" />
               </div>
-              <h3 className={`text-xl font-bold ${themeClasses.text} mb-2`}>
+              <h3 className={`text-2xl font-bold ${themeClasses.text} mb-3`}>
                 No Matches Available
               </h3>
-              <p className={`${themeClasses.textMuted} mb-6 text-sm`}>
+              <p className={`${themeClasses.textMuted} mb-8 text-base`}>
                 Check back soon for exciting cricket matches!
               </p>
               <button 
-                className={`${themeClasses.button} text-white px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105 font-medium`}
+                className={`${themeClasses.button} text-white px-8 py-4 rounded-xl transition-all duration-200 hover:scale-105 font-semibold shadow-lg`}
                 onClick={handleRefresh}
               >
                 Refresh Data
@@ -327,21 +344,21 @@ export default function Dashboard() {
             </div>
           </div>
         ) : (
-          <div ref={gridRef} className="space-y-6">
-            {/* Section Header */}
+          <div ref={gridRef} className="space-y-8">
+            {/* **UPDATED: Enhanced section header** */}
             <div className="flex items-center justify-between">
-              <h2 className={`text-xl sm:text-2xl font-bold ${themeClasses.text}`}>
+              <h2 className={`text-2xl sm:text-3xl font-bold ${themeClasses.text}`}>
                 Available Matches
               </h2>
-              <div className={`px-3 py-1 ${themeClasses.surface} ${themeClasses.border} border rounded-full backdrop-blur-sm`}>
-                <span className={`text-sm font-medium ${themeClasses.textSecondary}`}>
+              <div className={`px-4 py-2 ${themeClasses.surface} ${themeClasses.border} border rounded-2xl shadow-lg`}>
+                <span className={`text-base font-bold ${themeClasses.textSecondary}`}>
                   {matches.length}
                 </span>
               </div>
             </div>
 
-            {/* Optimized Matches Grid */}
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            {/* **UPDATED: Enhanced matches grid** */}
+            <div className="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
               {matches.map((match, index) => (
                 <div key={match.id} className="w-full">
                   <MatchCard
