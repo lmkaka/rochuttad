@@ -148,6 +148,7 @@ export default function Onboarding() {
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [isDarkMode, setIsDarkMode] = useState(globalTheme.isDarkMode)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const container = useRef<HTMLDivElement>(null)
   const cardA = useRef<HTMLDivElement>(null)
   const cardB = useRef<HTMLDivElement>(null)
@@ -156,45 +157,58 @@ export default function Onboarding() {
   const [language, setLanguage] = useState<Language>('English')
   const [saving, setSaving] = useState(false)
 
-  // Listen for theme changes
+  // Listen for theme and resize changes
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    
     const handleThemeChange = (event: CustomEvent) => {
       setIsDarkMode(event.detail.isDarkMode)
     }
     
+    window.addEventListener('resize', handleResize)
     window.addEventListener('themeChange', handleThemeChange as EventListener)
-    return () => window.removeEventListener('themeChange', handleThemeChange as EventListener)
+    
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('themeChange', handleThemeChange as EventListener)
+    }
   }, [])
 
-  // Fixed theme classes with better visibility
+  // Enhanced theme classes with better device icon visibility
   const themeClasses = useMemo(() => isDarkMode ? {
     bg: 'bg-slate-900',
-    cardBg: 'bg-slate-800/90 border-slate-700/80 backdrop-blur-xl shadow-2xl',
+    cardBg: 'bg-slate-800/95 border-slate-700/80 backdrop-blur-xl shadow-2xl',
     text: 'text-white',
     textSecondary: 'text-slate-300',
     textMuted: 'text-slate-400',
     input: 'bg-slate-700/90 border-slate-600/80 text-white focus:border-blue-500 placeholder-slate-400',
     buttonPrimary: 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl',
     buttonSecondary: 'bg-slate-700/80 hover:bg-slate-600/80 text-slate-200 border border-slate-600/80',
-    deviceCard: 'bg-slate-700/60 border-slate-600/60 hover:bg-slate-600/70 hover:border-slate-500/70',
-    deviceCardActive: 'bg-blue-600/30 border-blue-500/80 text-blue-300 shadow-lg',
+    deviceCard: 'bg-slate-700/70 border-slate-600/70 hover:bg-slate-600/80 hover:border-slate-500/80 text-slate-300',
+    deviceCardActive: 'bg-blue-600/30 border-blue-500/80 text-blue-300 shadow-lg ring-2 ring-blue-500/40',
+    deviceCardIcon: 'text-slate-400',
+    deviceCardActiveIcon: 'text-blue-400',
     iconColor: 'text-slate-400',
     progressBg: 'bg-slate-700/60',
     progressFill: 'bg-gradient-to-r from-blue-500 to-purple-500',
     gradientOverlay: 'bg-gradient-to-br from-slate-900/60 via-transparent to-slate-800/40'
   } : {
     bg: 'bg-gray-100',
-    cardBg: 'bg-white/95 border-gray-300/80 backdrop-blur-xl shadow-2xl',
+    cardBg: 'bg-white/98 border-gray-300/90 backdrop-blur-xl shadow-2xl',
     text: 'text-gray-900',
     textSecondary: 'text-gray-700',
     textMuted: 'text-gray-600',
-    input: 'bg-white/95 border-gray-300/80 text-gray-900 focus:border-indigo-500 placeholder-gray-500',
+    input: 'bg-white/98 border-gray-300/90 text-gray-900 focus:border-indigo-500 placeholder-gray-500',
     buttonPrimary: 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl',
-    buttonSecondary: 'bg-gray-200/90 hover:bg-gray-300/90 text-gray-700 border border-gray-300/80',
-    deviceCard: 'bg-gray-50/90 border-gray-300/70 hover:bg-gray-100/90 hover:border-gray-400/70',
-    deviceCardActive: 'bg-indigo-100/90 border-indigo-400/80 text-indigo-700 shadow-lg',
+    buttonSecondary: 'bg-gray-200/95 hover:bg-gray-300/95 text-gray-700 border border-gray-300/90',
+    deviceCard: 'bg-gray-100/95 border-gray-400/80 hover:bg-gray-200/95 hover:border-gray-500/80 text-gray-700',
+    deviceCardActive: 'bg-indigo-100/95 border-indigo-500/90 text-indigo-800 shadow-lg ring-2 ring-indigo-400/50',
+    deviceCardIcon: 'text-gray-700',
+    deviceCardActiveIcon: 'text-indigo-700',
     iconColor: 'text-gray-600',
-    progressBg: 'bg-gray-200/80',
+    progressBg: 'bg-gray-200/90',
     progressFill: 'bg-gradient-to-r from-indigo-500 to-purple-500',
     gradientOverlay: 'bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/30'
   }, [isDarkMode])
@@ -207,7 +221,8 @@ export default function Onboarding() {
   const next = () => {
     if (step === 0 && name.trim()) {
       gsap.to(cardA.current, { 
-        x: -60, 
+        x: isMobile ? 0 : -60, 
+        y: isMobile ? -30 : 0,
         autoAlpha: 0, 
         scale: 0.95, 
         duration: 0.5, 
@@ -215,8 +230,8 @@ export default function Onboarding() {
         onComplete: () => {
           setStep(1)
           gsap.fromTo(cardB.current, 
-            { x: 60, autoAlpha: 0, scale: 0.95 }, 
-            { x: 0, autoAlpha: 1, scale: 1, duration: 0.7, ease: 'back.out(1.2)' }
+            { x: isMobile ? 0 : 60, y: isMobile ? 30 : 0, autoAlpha: 0, scale: 0.95 }, 
+            { x: 0, y: 0, autoAlpha: 1, scale: 1, duration: 0.7, ease: 'back.out(1.2)' }
           )
         }
       })
@@ -226,7 +241,8 @@ export default function Onboarding() {
   const back = () => {
     if (step === 1) {
       gsap.to(cardB.current, { 
-        x: 60, 
+        x: isMobile ? 0 : 60, 
+        y: isMobile ? 30 : 0,
         autoAlpha: 0, 
         scale: 0.95, 
         duration: 0.5, 
@@ -234,8 +250,8 @@ export default function Onboarding() {
         onComplete: () => {
           setStep(0)
           gsap.fromTo(cardA.current, 
-            { x: -60, autoAlpha: 0, scale: 0.95 }, 
-            { x: 0, autoAlpha: 1, scale: 1, duration: 0.7, ease: 'back.out(1.2)' }
+            { x: isMobile ? 0 : -60, y: isMobile ? -30 : 0, autoAlpha: 0, scale: 0.95 }, 
+            { x: 0, y: 0, autoAlpha: 1, scale: 1, duration: 0.7, ease: 'back.out(1.2)' }
           )
         }
       })
@@ -283,20 +299,20 @@ export default function Onboarding() {
   ]
 
   return (
-    <div className={`min-h-screen ${themeClasses.bg} transition-colors duration-300 flex items-center justify-center p-4 relative overflow-hidden`}>
+    <div className={`min-h-screen ${themeClasses.bg} transition-colors duration-300 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden`}>
       {/* Enhanced particles background */}
       <OnboardingParticles isDarkMode={isDarkMode} />
       
       {/* Better background overlay */}
       <div className={`absolute inset-0 ${themeClasses.gradientOverlay} pointer-events-none`} style={{ zIndex: 2 }}></div>
 
-      <div ref={container} className="w-full max-w-md relative" style={{ zIndex: 10 }}>
+      <div ref={container} className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-md'} relative`} style={{ zIndex: 10 }}>
         {/* Header with better contrast */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white mb-6 shadow-2xl">
-            <PlayIcon className="h-8 w-8" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white mb-4 sm:mb-6 shadow-2xl">
+            <PlayIcon className="h-7 w-7 sm:h-8 sm:w-8" />
           </div>
-          <h1 className={`text-2xl font-bold ${themeClasses.text} mb-2`}>
+          <h1 className={`text-xl sm:text-2xl font-bold ${themeClasses.text} mb-2`}>
             Complete Your Profile
           </h1>
           <p className={`text-sm ${themeClasses.textSecondary}`}>
@@ -305,7 +321,7 @@ export default function Onboarding() {
         </div>
 
         {/* Enhanced Progress Bar */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className={`h-2 ${themeClasses.progressBg} rounded-full overflow-hidden border ${isDarkMode ? 'border-slate-600/50' : 'border-gray-300/50'}`}>
             <div 
               className={`h-full ${themeClasses.progressFill} transition-all duration-500 ease-out`}
@@ -324,13 +340,13 @@ export default function Onboarding() {
 
         {/* Step 1: Personal Information */}
         {step === 0 && (
-          <div ref={cardA} className={`${themeClasses.cardBg} rounded-2xl border p-6`}>
+          <div ref={cardA} className={`${themeClasses.cardBg} rounded-2xl border p-4 sm:p-6`}>
             <div className="flex items-center gap-3 mb-6">
-              <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-blue-500/20 border border-blue-500/30' : 'bg-blue-100 border border-blue-200'}`}>
-                <UserIcon className={`h-6 w-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+              <div className={`p-2 sm:p-3 rounded-lg ${isDarkMode ? 'bg-blue-500/20 border border-blue-500/30' : 'bg-blue-100 border border-blue-200'}`}>
+                <UserIcon className={`h-5 w-5 sm:h-6 sm:w-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
               </div>
               <div>
-                <h2 className={`text-xl font-semibold ${themeClasses.text}`}>
+                <h2 className={`text-lg sm:text-xl font-semibold ${themeClasses.text}`}>
                   Tell us about you
                 </h2>
                 <p className={`text-sm ${themeClasses.textMuted}`}>
@@ -346,7 +362,7 @@ export default function Onboarding() {
                 </label>
                 <input
                   type="text"
-                  className={`w-full px-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30`}
+                  className={`w-full px-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-base`}
                   placeholder="Enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -355,11 +371,11 @@ export default function Onboarding() {
               </div>
             </div>
 
-            <div className="flex justify-end mt-8">
+            <div className="flex justify-end mt-6 sm:mt-8">
               <button
                 onClick={next}
                 disabled={!name.trim()}
-                className={`px-6 py-3 ${themeClasses.buttonPrimary} rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 hover:scale-105`}
+                className={`px-6 py-3 ${themeClasses.buttonPrimary} rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 hover:scale-105 active:scale-95 touch-manipulation`}
               >
                 <span>Continue</span>
                 <ArrowRightIcon className="h-5 w-5" />
@@ -370,13 +386,13 @@ export default function Onboarding() {
 
         {/* Step 2: Preferences */}
         {step === 1 && (
-          <div ref={cardB} className={`${themeClasses.cardBg} rounded-2xl border p-6`}>
+          <div ref={cardB} className={`${themeClasses.cardBg} rounded-2xl border p-4 sm:p-6`}>
             <div className="flex items-center gap-3 mb-6">
-              <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-purple-500/20 border border-purple-500/30' : 'bg-purple-100 border border-purple-200'}`}>
-                <SparklesIcon className={`h-6 w-6 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+              <div className={`p-2 sm:p-3 rounded-lg ${isDarkMode ? 'bg-purple-500/20 border border-purple-500/30' : 'bg-purple-100 border border-purple-200'}`}>
+                <SparklesIcon className={`h-5 w-5 sm:h-6 sm:w-6 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
               </div>
               <div>
-                <h2 className={`text-xl font-semibold ${themeClasses.text}`}>
+                <h2 className={`text-lg sm:text-xl font-semibold ${themeClasses.text}`}>
                   Set your preferences
                 </h2>
                 <p className={`text-sm ${themeClasses.textMuted}`}>
@@ -386,12 +402,12 @@ export default function Onboarding() {
             </div>
 
             <div className="space-y-6">
-              {/* Device Preference */}
+              {/* Device Preference - Enhanced for mobile */}
               <div>
                 <label className={`block text-sm font-medium ${themeClasses.text} mb-3`}>
                   Primary Device
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-3 gap-3'}`}>
                   {deviceOptions.map((option) => {
                     const IconComponent = option.icon
                     const isActive = device === option.value
@@ -403,10 +419,14 @@ export default function Onboarding() {
                         onClick={() => setDevice(option.value)}
                         className={`${
                           isActive ? themeClasses.deviceCardActive : themeClasses.deviceCard
-                        } border rounded-xl p-4 text-center transition-all duration-200 hover:scale-105 hover:shadow-md`}
+                        } border-2 rounded-xl ${isMobile ? 'p-3 flex items-center gap-3' : 'p-4 text-center'} transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 touch-manipulation`}
                       >
-                        <IconComponent className="h-6 w-6 mx-auto mb-2" />
-                        <div className="text-sm font-medium">{option.label}</div>
+                        <IconComponent className={`${isMobile ? 'h-6 w-6' : 'h-6 w-6 mx-auto mb-2'} ${
+                          isActive ? themeClasses.deviceCardActiveIcon : themeClasses.deviceCardIcon
+                        }`} />
+                        <div className={`text-sm font-bold ${isActive ? 'text-current' : 'text-current'}`}>
+                          {option.label}
+                        </div>
                       </button>
                     )
                   })}
@@ -422,7 +442,7 @@ export default function Onboarding() {
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as Language)}
-                  className={`w-full px-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30`}
+                  className={`w-full px-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-base`}
                 >
                   <option value="English">English</option>
                   <option value="Hindi">हिंदी (Hindi)</option>
@@ -430,10 +450,10 @@ export default function Onboarding() {
               </div>
             </div>
 
-            <div className="flex justify-between gap-4 mt-8">
+            <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-between gap-4'} mt-6 sm:mt-8`}>
               <button
                 onClick={back}
-                className={`px-6 py-3 ${themeClasses.buttonSecondary} rounded-xl font-medium transition-all duration-200 flex items-center gap-2 hover:scale-105`}
+                className={`${isMobile ? 'order-2' : ''} px-6 py-3 ${themeClasses.buttonSecondary} rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 touch-manipulation`}
               >
                 <ArrowLeftIcon className="h-5 w-5" />
                 <span>Back</span>
@@ -442,7 +462,7 @@ export default function Onboarding() {
               <button
                 onClick={submit}
                 disabled={saving}
-                className={`px-6 py-3 ${themeClasses.buttonPrimary} rounded-xl font-medium transition-all duration-200 disabled:opacity-50 flex items-center gap-2 hover:scale-105`}
+                className={`${isMobile ? 'order-1' : ''} px-6 py-3 ${themeClasses.buttonPrimary} rounded-xl font-medium transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 touch-manipulation`}
               >
                 {saving ? (
                   <>
