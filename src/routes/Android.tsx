@@ -13,7 +13,7 @@ const Android: React.FC = () => {
     >
       <img 
         src="https://radarxtv.site/" 
-        alt="" 
+        alt="https://radarofc.onrender.com/android.html" 
         style={{
           position: 'absolute',
           top: '12px',
@@ -25,7 +25,7 @@ const Android: React.FC = () => {
       />
       
       <iframe
-        src="https://cricketstan.github.io/Channel-14/"
+        src=""
         style={{
           width: '100%',
           height: '100%',
