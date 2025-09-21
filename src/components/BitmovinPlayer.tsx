@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
 // Bitmovin Player types
@@ -13,6 +13,7 @@ declare global {
           pause: () => void
           mute: () => void
           unmute: () => void
+          isDestroyed: () => boolean
         }
       }
     }
@@ -34,121 +35,179 @@ export default function BitmovinPlayer({
 }: BitmovinPlayerProps) {
   const playerRef = useRef<HTMLDivElement>(null)
   const playerInstanceRef = useRef<any>(null)
+  const isInitializingRef = useRef(false)
+  const mountedRef = useRef(true)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [scriptLoaded, setScriptLoaded] = useState(false)
 
+  // Track component mount state
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  // Safe state setter that checks if component is mounted
+  const safeSetState = useCallback((setter: () => void) => {
+    if (mountedRef.current) {
+      setter()
+    }
+  }, [])
+
   // Load Bitmovin Player script
   useEffect(() => {
-    const loadBitmovinScript = () => {
-      if (window.bitmovin) {
-        setScriptLoaded(true)
-        return
-      }
-
-      const script = document.createElement('script')
-      script.src = 'https://cdn.jsdelivr.net/npm/bitmovin-player@8/bitmovinplayer.js'
-      script.async = true
-      script.onload = () => setScriptLoaded(true)
-      script.onerror = () => setError('Failed to load Bitmovin Player')
-      document.head.appendChild(script)
-
-      return () => {
-        if (document.head.contains(script)) {
-          document.head.removeChild(script)
-        }
-      }
+    if (window.bitmovin) {
+      setScriptLoaded(true)
+      return
     }
 
-    loadBitmovinScript()
+    // Check if script is already loading
+    const existingScript = document.querySelector('script[src*="bitmovinplayer"]')
+    if (existingScript) {
+      existingScript.addEventListener('load', () => {
+        safeSetState(() => setScriptLoaded(true))
+      })
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = 'https://cdn.jsdelivr.net/npm/bitmovin-player@8/bitmovinplayer.js'
+    script.async = true
+    script.onload = () => {
+      safeSetState(() => setScriptLoaded(true))
+    }
+    script.onerror = () => {
+      safeSetState(() => setError('Failed to load Bitmovin Player'))
+    }
+    document.head.appendChild(script)
+
+    return () => {
+      // Don't remove script on unmount as it may be used by other instances
+    }
+  }, [safeSetState])
+
+  // Cleanup player function
+  const cleanupPlayer = useCallback(() => {
+    if (playerInstanceRef.current) {
+      try {
+        if (!playerInstanceRef.current.isDestroyed?.()) {
+          playerInstanceRef.current.destroy()
+        }
+      } catch (err) {
+        console.warn('Error destroying player:', err)
+      }
+      playerInstanceRef.current = null
+    }
+    isInitializingRef.current = false
   }, [])
+
+  // Initialize player function
+  const initializePlayer = useCallback(async () => {
+    if (!scriptLoaded || !playerRef.current || !mountedRef.current) return
+    
+    // Prevent multiple initializations
+    if (isInitializingRef.current) return
+    isInitializingRef.current = true
+
+    try {
+      // Cleanup existing player first
+      cleanupPlayer()
+
+      safeSetState(() => {
+        setLoading(true)
+        setError(null)
+      })
+
+      // Small delay to ensure DOM is ready
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      if (!mountedRef.current) return
+
+      const playerConfig = {
+        key: '90f78acb-6226-4dc9-9ddd-7dda84143e50',
+        analytics: {
+          key: '8f54bbf3-e230-40fd-aecd-97d36a58585a',
+          videoId: "Live-Cricket",
+          title: "Live Cricket Stream"
+        },
+        playback: {
+          autoplay: true,
+          muted: false
+        },
+        style: {
+          width: "100%",
+          height: "100%"
+        },
+        ui: {
+          watermark: {
+            display: false
+          }
+        }
+      }
+
+      const sourceConfig = {
+        hls: streamUrl,
+        title: "Live Cricket Stream"
+      }
+
+      if (!mountedRef.current || !playerRef.current) return
+
+      // Create new player
+      const player = new window.bitmovin.player.Player(playerRef.current, playerConfig)
+      playerInstanceRef.current = player
+
+      // Load stream only if component is still mounted
+      if (mountedRef.current) {
+        await player.load(sourceConfig)
+        
+        safeSetState(() => {
+          setLoading(false)
+        })
+        
+        onLoad?.()
+        console.log("Bitmovin Player: Stream loaded successfully")
+      }
+
+    } catch (err: any) {
+      console.error("Bitmovin Player Error:", err)
+      
+      safeSetState(() => {
+        setError(err.message || 'Failed to load stream')
+        setLoading(false)
+      })
+      
+      onError?.(err)
+    } finally {
+      isInitializingRef.current = false
+    }
+  }, [scriptLoaded, streamUrl, onError, onLoad, safeSetState, cleanupPlayer])
 
   // Initialize player when script is loaded
   useEffect(() => {
-    if (!scriptLoaded || !playerRef.current) return
-
-    const initializePlayer = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-
-        const playerConfig = {
-          key: '90f78acb-6226-4dc9-9ddd-7dda84143e50',
-          analytics: {
-            key: '8f54bbf3-e230-40fd-aecd-97d36a58585a',
-            videoId: "Live-Cricket",
-            title: "Live Cricket Stream"
-          },
-          playback: {
-            autoplay: true,
-            muted: false
-          },
-          style: {
-            width: "100%",
-            height: "100%"
-          },
-          ui: {
-            watermark: {
-              display: false
-            }
-          }
-        }
-
-        const sourceConfig = {
-          hls: streamUrl,
-          title: "Live Cricket Stream"
-        }
-
-        // Cleanup existing player
-        if (playerInstanceRef.current) {
-          playerInstanceRef.current.destroy()
-          playerInstanceRef.current = null
-        }
-
-        // Create new player
-        const player = new window.bitmovin.player.Player(playerRef.current, playerConfig)
-        playerInstanceRef.current = player
-
-        // Load stream
-        await player.load(sourceConfig)
-        
-        setLoading(false)
-        onLoad?.()
-        
-        console.log("Bitmovin Player: Stream loaded successfully")
-
-      } catch (err: any) {
-        console.error("Bitmovin Player Error:", err)
-        setError(err.message || 'Failed to load stream')
-        setLoading(false)
-        onError?.(err)
-      }
+    if (scriptLoaded && playerRef.current && mountedRef.current) {
+      initializePlayer()
     }
 
-    initializePlayer()
-
-    // Cleanup on unmount
+    // Cleanup on unmount or dependencies change
     return () => {
-      if (playerInstanceRef.current) {
-        try {
-          playerInstanceRef.current.destroy()
-          playerInstanceRef.current = null
-        } catch (err) {
-          console.warn("Error destroying player:", err)
-        }
-      }
+      cleanupPlayer()
     }
-  }, [scriptLoaded, streamUrl, onError, onLoad])
+  }, [scriptLoaded, initializePlayer, cleanupPlayer])
 
-  const handleRetry = () => {
-    setError(null)
-    setLoading(true)
-    // Re-trigger initialization
-    if (scriptLoaded && playerRef.current) {
-      const event = new Event('retry')
-      playerRef.current.dispatchEvent(event)
+  const handleRetry = useCallback(() => {
+    if (mountedRef.current) {
+      setError(null)
+      setLoading(true)
+      // Small delay before retrying
+      setTimeout(() => {
+        if (mountedRef.current) {
+          initializePlayer()
+        }
+      }, 500)
     }
-  }
+  }, [initializePlayer])
 
   if (error) {
     return (
@@ -190,11 +249,11 @@ export default function BitmovinPlayer({
 
       {/* Custom CSS for hiding watermark */}
       <style jsx>{`
-        :global(.bmpui-ui-watermark) {
+        :global(.bmpui-ui-watermark),
+        :global(.bmpui-watermark),
+        :global([class*="watermark"]) {
           display: none !important;
-        }
-        :global(.bmpui-watermark) {
-          display: none !important;
+          visibility: hidden !important;
         }
       `}</style>
     </div>
