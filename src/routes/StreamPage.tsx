@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { TvIcon, PlayIcon, BoltIcon } from '@heroicons/react/24/solid'
 import { ClockIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { globalTheme } from './AuthPage'
-import BitmovinPlayer from '../components/BitmovinPlayer'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 
@@ -14,6 +13,7 @@ export default function StreamPage() {
   const headerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<HTMLDivElement>(null)
   const featuresRef = useRef<HTMLDivElement>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
     const handleThemeChange = (event: CustomEvent) => {
@@ -82,12 +82,13 @@ export default function StreamPage() {
     setShowTelegramModal(false)
   }
 
-  const handlePlayerLoad = () => {
+  const handleIframeLoad = () => {
+    console.log('Stream iframe loaded successfully')
     setPlayerLoaded(true)
   }
 
-  const handlePlayerError = (error: any) => {
-    console.error('Player error:', error)
+  const handleIframeError = () => {
+    console.error('Failed to load stream iframe')
   }
 
   return (
@@ -137,17 +138,34 @@ export default function StreamPage() {
               </div>
             </div>
 
-            {/* **MOBILE-OPTIMIZED: Player with better mobile sizing** */}
+            {/* **MOBILE-OPTIMIZED: Cricket Stream Iframe with better mobile sizing** */}
             <div className="relative bg-black">
-              <BitmovinPlayer
-                className="w-full aspect-video"
+              {/* Loading indicator */}
+              {!playerLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+                  <div className="text-center text-white">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p className="text-sm">Loading Stream...</p>
+                  </div>
+                </div>
+              )}
+              
+              <iframe
+                ref={iframeRef}
+                src="https://cricketstan.github.io/Channel-13/"
+                className="w-full aspect-video border-0"
                 style={{ 
                   minHeight: '240px', 
                   height: window.innerWidth < 640 ? '50vh' : '60vh', 
                   maxHeight: window.innerWidth < 640 ? '400px' : '600px' 
                 }}
-                onLoad={handlePlayerLoad}
-                onError={handlePlayerError}
+                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+                onLoad={handleIframeLoad}
+                onError={handleIframeError}
+                title="Live Cricket Stream"
+                sandbox="allow-scripts allow-same-origin allow-presentation allow-fullscreen"
               />
             </div>
 
@@ -178,7 +196,7 @@ export default function StreamPage() {
             <div className={`${themeClasses.cardBg} rounded-xl sm:rounded-2xl border p-4 sm:p-5 lg:p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`}>
               <TvIcon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-blue-600 mx-auto mb-2 sm:mb-3 lg:mb-4" />
               <h3 className={`text-base sm:text-lg lg:text-xl font-bold ${themeClasses.text} mb-1 sm:mb-2`}>HD Quality</h3>
-              <p className={`text-xs sm:text-sm lg:text-base ${themeClasses.textMuted}`}>Bitmovin Player</p>
+              <p className={`text-xs sm:text-sm lg:text-base ${themeClasses.textMuted}`}>Cricket Stream</p>
             </div>
             
             <div className={`${themeClasses.cardBg} rounded-xl sm:rounded-2xl border p-4 sm:p-5 lg:p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`}>
@@ -235,4 +253,4 @@ export default function StreamPage() {
       )}
     </div>
   )
-}
+      }
