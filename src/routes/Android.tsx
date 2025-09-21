@@ -10,188 +10,182 @@ declare global {
 
 const Android: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const manifestUri = "https://sundirectgo-live.pc.cdn.bitgravity.com/hd38/dth.mpd";
 
-    const init = async () => {
-      if (!videoRef.current) return;
+    const initPlayer = async () => {
+      // Check if Shaka is loaded
+      if (!window.shaka) {
+        console.error('Shaka Player not loaded');
+        return;
+      }
 
-      const video = videoRef.current;
-      const ui = video['ui'];
-      const controls = ui.getControls();
-      const player = controls.getPlayer();
+      // Install polyfills
+      window.shaka.polyfill.installAll();
 
-      window.player = player;
-      window.ui = ui;
+      // Check browser support
+      if (!window.shaka.Player.isBrowserSupported()) {
+        console.error('Browser not supported!');
+        return;
+      }
 
-      const uiConfig = {
-        controlPanelElements: [
-          'play_pause',
-          'mute',
-          'volume',
-          'quality',
-          'fullscreen',
-          'time_and_duration'
-        ],
-        addBigPlayButton: false,
-        addSeekBar: true
-      };
-      ui.configure(uiConfig);
-
-      player.configure({
-        drm: {
-          "clearKeys": {
-            "5e833f4019554aa394ff6de2eb19bf78": "f60e08a145804890492f315b61789ac5"
-          }
-        },
-        abr: {
-          enabled: true
-        }
-      });
-
-      player.addEventListener('error', onPlayerErrorEvent);
-      controls.addEventListener('error', onUIErrorEvent);
+      if (!videoRef.current || !containerRef.current) {
+        console.error('Video element not found');
+        return;
+      }
 
       try {
-        await player.load(manifestUri);
-        console.log('Stream loaded');
+        // Initialize Shaka UI
+        const ui = new window.shaka.ui.Overlay(
+          videoRef.current,
+          containerRef.current,
+          videoRef.current
+        );
 
+        const controls = ui.getControls();
+        const player = controls.getPlayer();
+
+        // Store references globally
+        window.player = player;
+        window.ui = ui;
+
+        // Configure UI
+        const uiConfig = {
+          controlPanelElements: [
+            'play_pause',
+            'mute',
+            'volume',
+            'quality',
+            'fullscreen',
+            'time_and_duration'
+          ],
+          addBigPlayButton: false,
+          addSeekBar: true
+        };
+        ui.configure(uiConfig);
+
+        // Configure player
+        player.configure({
+          drm: {
+            clearKeys: {
+              "5e833f4019554aa394ff6de2eb19bf78": "f60e08a145804890492f315b61789ac5"
+            }
+          },
+          abr: {
+            enabled: true
+          }
+        });
+
+        // Add error listeners
+        player.addEventListener('error', (errorEvent: any) => {
+          console.error('Player Error:', errorEvent.detail);
+        });
+
+        controls.addEventListener('error', (errorEvent: any) => {
+          console.error('UI Error:', errorEvent.detail);
+        });
+
+        // Load the manifest
+        await player.load(manifestUri);
+        console.log('Stream loaded successfully');
+
+        // Select 576p by default
         const tracks = player.getVariantTracks();
         const track576 = tracks.find((t: any) => t.height === 576);
         if (track576) {
           await player.selectVariantTrack(track576, true);
           console.log("576p selected by default");
         }
+
       } catch (error) {
-        onPlayerError(error);
+        console.error('Failed to initialize player:', error);
       }
     };
 
-    const onPlayerErrorEvent = (errorEvent: any) => {
-      onPlayerError(errorEvent.detail);
-    };
-
-    const onPlayerError = (error: any) => {
-      console.error('Error code', error.code, 'object', error);
-    };
-
-    const onUIErrorEvent = (errorEvent: any) => {
-      onPlayerError(errorEvent.detail);
-    };
-
-    const initFailed = () => {
-      console.error('Unable to load the UI library!');
-    };
-
-    // Wait for Shaka UI to load
-    const handleShakaLoaded = () => {
-      init();
-    };
-
-    const handleShakaLoadFailed = () => {
-      initFailed();
-    };
-
-    document.addEventListener('shaka-ui-loaded', handleShakaLoaded);
-    document.addEventListener('shaka-ui-load-failed', handleShakaLoadFailed);
-
-    // Anti-iframe protection
-    if (window.top !== window.self) {
-      const ref = document.referrer;
-      if (!ref.includes("watchwithradar.live")) {
-        document.body.innerHTML = '<div id="message">Ab to copy mat kat chutiye</div>';
+    // Wait for Shaka to be available
+    const checkShaka = () => {
+      if (window.shaka) {
+        initPlayer();
+      } else {
+        // Wait a bit more and try again
+        setTimeout(checkShaka, 100);
       }
-    }
+    };
 
+    // Start checking for Shaka
+    checkShaka();
+
+    // Cleanup function
     return () => {
-      document.removeEventListener('shaka-ui-loaded', handleShakaLoaded);
-      document.removeEventListener('shaka-ui-load-failed', handleShakaLoadFailed);
+      if (window.player) {
+        try {
+          window.player.destroy();
+        } catch (error) {
+          console.error('Error destroying player:', error);
+        }
+      }
+      if (window.ui) {
+        try {
+          window.ui.destroy();
+        } catch (error) {
+          console.error('Error destroying UI:', error);
+        }
+      }
     };
   }, []);
 
   return (
-    <>
-      {/* Add Shaka Player CSS */}
-      <link 
-        rel="stylesheet" 
-        href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.6/controls.min.css" 
-        crossOrigin="anonymous"
-      />
-      <link 
-        rel="stylesheet" 
-        href="https://livecrichdofficial.pages.dev/livecrichd2.css"
-      />
-      
+    <div
+      style={{
+        margin: 0,
+        background: '#000',
+        color: 'white',
+        fontFamily: 'sans-serif',
+        height: '100vh',
+        width: '100vw',
+        position: 'relative'
+      }}
+    >
       <div 
+        ref={containerRef}
+        data-shaka-player-container
         style={{
-          margin: 0,
-          background: '#000',
-          color: 'white',
-          fontFamily: 'sans-serif',
+          maxWidth: '100%',
           height: '100vh',
-          width: '100vw'
+          margin: '0 auto',
+          position: 'relative'
         }}
       >
-        <div 
-          id="player-container"
+        {/* Logo */}
+        <img 
+          src="https://radarxtv.site/" 
+          alt="" 
           style={{
-            maxWidth: '100%',
-            aspectRatio: '16/9',
-            margin: '0 auto',
-            position: 'relative'
+            position: 'absolute',
+            top: '12px',
+            left: '12px',
+            width: '80px',
+            zIndex: 1000,
+            filter: 'drop-shadow(0 0 8px #00f7ff)'
           }}
-        >
-          {/* Injected Logo */}
-          <img 
-            src="https://radarxtv.site/" 
-            alt="" 
-            style={{
-              position: 'absolute',
-              top: '12px',
-              left: '12px',
-              width: '80px',
-              zIndex: 1000,
-              filter: 'drop-shadow(0 0 8px #00f7ff)'
-            }}
-            className="radarx-logo"
-          />
-          
-          {/* Shaka Player Container */}
-          <div data-shaka-player-container className="shaka-video-container">
-            <video 
-              ref={videoRef}
-              autoPlay 
-              muted 
-              data-shaka-player 
-              id="video" 
-              poster="#"
-              style={{ width: '100%', height: '100%' }}
-            />
-          </div>
-        </div>
-
-        <div 
-          id="message"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
+        />
+        
+        {/* Video Element */}
+        <video 
+          ref={videoRef}
+          data-shaka-player
+          autoPlay 
+          muted 
+          style={{ 
+            width: '100%', 
             height: '100%',
-            background: 'rgba(0, 0, 0, 0.8)',
-            color: '#fff',
-            display: 'none',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '24px',
-            zIndex: 1001
+            backgroundColor: '#000'
           }}
-        >
-          Ab to copy mat kat chutiye
-        </div>
+        />
       </div>
-    </>
+    </div>
   );
 };
 
