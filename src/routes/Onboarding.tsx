@@ -21,7 +21,7 @@ import { globalTheme } from './AuthPage'
 type Device = 'iOS' | 'Android' | 'Desktop'
 type Language = 'Hindi' | 'English'
 
-// Enhanced particles for onboarding
+// Enhanced particles for better visibility
 const OnboardingParticles = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationFrameRef = useRef<number>()
@@ -58,15 +58,15 @@ const OnboardingParticles = ({ isDarkMode }: { isDarkMode: boolean }) => {
       constructor(width: number, height: number) {
         this.x = Math.random() * width
         this.y = Math.random() * height
-        this.vx = (Math.random() - 0.5) * 0.3
-        this.vy = (Math.random() - 0.5) * 0.3
-        this.size = Math.random() * 2 + 0.5
-        this.baseOpacity = Math.random() * 0.4 + 0.1
+        this.vx = (Math.random() - 0.5) * 0.4
+        this.vy = (Math.random() - 0.5) * 0.4
+        this.size = Math.random() * 3 + 1
+        this.baseOpacity = isDarkMode ? (Math.random() * 0.5 + 0.2) : (Math.random() * 0.3 + 0.1)
         this.opacity = this.baseOpacity
         
         const colors = isDarkMode 
-          ? ['#60a5fa', '#a78bfa', '#34d399'] 
-          : ['#3b82f6', '#8b5cf6', '#10b981']
+          ? ['#60a5fa', '#a78bfa', '#34d399', '#f59e0b'] 
+          : ['#2563eb', '#7c3aed', '#059669', '#d97706']
         this.color = colors[Math.floor(Math.random() * colors.length)]
         
         this.life = 0
@@ -77,8 +77,7 @@ const OnboardingParticles = ({ isDarkMode }: { isDarkMode: boolean }) => {
         this.x += this.vx * deltaTime * 0.02
         this.y += this.vy * deltaTime * 0.02
         this.life += deltaTime
-
-        this.opacity = this.baseOpacity * (0.5 + 0.5 * Math.sin(this.life * 0.01))
+        this.opacity = this.baseOpacity * (0.6 + 0.4 * Math.sin(this.life * 0.008))
 
         if (this.x < 0) this.x = width
         if (this.x > width) this.x = 0
@@ -103,7 +102,7 @@ const OnboardingParticles = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
     const initParticles = () => {
       particlesRef.current = []
-      const count = window.innerWidth <= 768 ? 15 : 25
+      const count = window.innerWidth <= 768 ? 20 : 30
       for (let i = 0; i < count; i++) {
         particlesRef.current.push(new Particle(canvas.width, canvas.height))
       }
@@ -152,7 +151,6 @@ export default function Onboarding() {
   const container = useRef<HTMLDivElement>(null)
   const cardA = useRef<HTMLDivElement>(null)
   const cardB = useRef<HTMLDivElement>(null)
-
   const [name, setName] = useState('')
   const [device, setDevice] = useState<Device>('Android')
   const [language, setLanguage] = useState<Language>('English')
@@ -168,35 +166,37 @@ export default function Onboarding() {
     return () => window.removeEventListener('themeChange', handleThemeChange as EventListener)
   }, [])
 
-  // Enhanced theme classes
+  // Fixed theme classes with better visibility
   const themeClasses = useMemo(() => isDarkMode ? {
     bg: 'bg-slate-900',
-    cardBg: 'bg-slate-800/80 border-slate-700/60 backdrop-blur-xl',
+    cardBg: 'bg-slate-800/90 border-slate-700/80 backdrop-blur-xl shadow-2xl',
     text: 'text-white',
     textSecondary: 'text-slate-300',
     textMuted: 'text-slate-400',
-    input: 'bg-slate-700/80 border-slate-600/60 text-white focus:border-blue-500 placeholder-slate-400',
+    input: 'bg-slate-700/90 border-slate-600/80 text-white focus:border-blue-500 placeholder-slate-400',
     buttonPrimary: 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl',
-    buttonSecondary: 'bg-slate-700/60 hover:bg-slate-600/60 text-slate-300 border border-slate-600/60',
-    deviceCard: 'bg-slate-700/50 border-slate-600/50 hover:bg-slate-600/60',
-    deviceCardActive: 'bg-blue-600/20 border-blue-500/60 text-blue-400',
+    buttonSecondary: 'bg-slate-700/80 hover:bg-slate-600/80 text-slate-200 border border-slate-600/80',
+    deviceCard: 'bg-slate-700/60 border-slate-600/60 hover:bg-slate-600/70 hover:border-slate-500/70',
+    deviceCardActive: 'bg-blue-600/30 border-blue-500/80 text-blue-300 shadow-lg',
     iconColor: 'text-slate-400',
-    progressBg: 'bg-slate-700/50',
-    progressFill: 'bg-gradient-to-r from-blue-500 to-purple-500'
+    progressBg: 'bg-slate-700/60',
+    progressFill: 'bg-gradient-to-r from-blue-500 to-purple-500',
+    gradientOverlay: 'bg-gradient-to-br from-slate-900/60 via-transparent to-slate-800/40'
   } : {
-    bg: 'bg-slate-50',
-    cardBg: 'bg-white/90 border-slate-200/70 backdrop-blur-xl',
-    text: 'text-slate-900',
-    textSecondary: 'text-slate-700',
-    textMuted: 'text-slate-500',
-    input: 'bg-white/95 border-slate-200/70 text-slate-900 focus:border-indigo-500 placeholder-slate-500',
+    bg: 'bg-gray-100',
+    cardBg: 'bg-white/95 border-gray-300/80 backdrop-blur-xl shadow-2xl',
+    text: 'text-gray-900',
+    textSecondary: 'text-gray-700',
+    textMuted: 'text-gray-600',
+    input: 'bg-white/95 border-gray-300/80 text-gray-900 focus:border-indigo-500 placeholder-gray-500',
     buttonPrimary: 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl',
-    buttonSecondary: 'bg-slate-100/80 hover:bg-slate-200/80 text-slate-700 border border-slate-200/70',
-    deviceCard: 'bg-slate-50/80 border-slate-200/60 hover:bg-slate-100/80',
-    deviceCardActive: 'bg-indigo-50 border-indigo-300 text-indigo-700',
-    iconColor: 'text-slate-500',
-    progressBg: 'bg-slate-200/60',
-    progressFill: 'bg-gradient-to-r from-indigo-500 to-purple-500'
+    buttonSecondary: 'bg-gray-200/90 hover:bg-gray-300/90 text-gray-700 border border-gray-300/80',
+    deviceCard: 'bg-gray-50/90 border-gray-300/70 hover:bg-gray-100/90 hover:border-gray-400/70',
+    deviceCardActive: 'bg-indigo-100/90 border-indigo-400/80 text-indigo-700 shadow-lg',
+    iconColor: 'text-gray-600',
+    progressBg: 'bg-gray-200/80',
+    progressFill: 'bg-gradient-to-r from-indigo-500 to-purple-500',
+    gradientOverlay: 'bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/30'
   }, [isDarkMode])
 
   useGSAP(() => {
@@ -245,6 +245,7 @@ export default function Onboarding() {
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!session?.user) return
+
     setSaving(true)
     
     try {
@@ -283,19 +284,16 @@ export default function Onboarding() {
 
   return (
     <div className={`min-h-screen ${themeClasses.bg} transition-colors duration-300 flex items-center justify-center p-4 relative overflow-hidden`}>
-      {/* Subtle particles background */}
+      {/* Enhanced particles background */}
       <OnboardingParticles isDarkMode={isDarkMode} />
       
-      {/* Background overlay */}
-      <div className={`absolute inset-0 ${isDarkMode 
-        ? 'bg-gradient-to-br from-slate-900/50 via-transparent to-slate-800/30' 
-        : 'bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/20'
-      } pointer-events-none`} style={{ zIndex: 2 }}></div>
+      {/* Better background overlay */}
+      <div className={`absolute inset-0 ${themeClasses.gradientOverlay} pointer-events-none`} style={{ zIndex: 2 }}></div>
 
       <div ref={container} className="w-full max-w-md relative" style={{ zIndex: 10 }}>
-        {/* Header */}
+        {/* Header with better contrast */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white mb-6 shadow-xl">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white mb-6 shadow-2xl">
             <PlayIcon className="h-8 w-8" />
           </div>
           <h1 className={`text-2xl font-bold ${themeClasses.text} mb-2`}>
@@ -306,19 +304,19 @@ export default function Onboarding() {
           </p>
         </div>
 
-        {/* Progress Bar */}
+        {/* Enhanced Progress Bar */}
         <div className="mb-8">
-          <div className={`h-2 ${themeClasses.progressBg} rounded-full overflow-hidden`}>
+          <div className={`h-2 ${themeClasses.progressBg} rounded-full overflow-hidden border ${isDarkMode ? 'border-slate-600/50' : 'border-gray-300/50'}`}>
             <div 
               className={`h-full ${themeClasses.progressFill} transition-all duration-500 ease-out`}
               style={{ width: step === 0 ? '50%' : '100%' }}
             />
           </div>
           <div className="flex justify-between mt-2">
-            <span className={`text-xs ${step === 0 ? themeClasses.text : themeClasses.textMuted}`}>
+            <span className={`text-xs font-medium ${step === 0 ? themeClasses.text : themeClasses.textMuted}`}>
               Personal Info
             </span>
-            <span className={`text-xs ${step === 1 ? themeClasses.text : themeClasses.textMuted}`}>
+            <span className={`text-xs font-medium ${step === 1 ? themeClasses.text : themeClasses.textMuted}`}>
               Preferences
             </span>
           </div>
@@ -326,9 +324,9 @@ export default function Onboarding() {
 
         {/* Step 1: Personal Information */}
         {step === 0 && (
-          <div ref={cardA} className={`${themeClasses.cardBg} rounded-2xl border p-6 shadow-xl`}>
+          <div ref={cardA} className={`${themeClasses.cardBg} rounded-2xl border p-6`}>
             <div className="flex items-center gap-3 mb-6">
-              <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
+              <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-blue-500/20 border border-blue-500/30' : 'bg-blue-100 border border-blue-200'}`}>
                 <UserIcon className={`h-6 w-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
               </div>
               <div>
@@ -348,7 +346,7 @@ export default function Onboarding() {
                 </label>
                 <input
                   type="text"
-                  className={`w-full px-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                  className={`w-full px-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30`}
                   placeholder="Enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -361,7 +359,7 @@ export default function Onboarding() {
               <button
                 onClick={next}
                 disabled={!name.trim()}
-                className={`px-6 py-3 ${themeClasses.buttonPrimary} rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+                className={`px-6 py-3 ${themeClasses.buttonPrimary} rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 hover:scale-105`}
               >
                 <span>Continue</span>
                 <ArrowRightIcon className="h-5 w-5" />
@@ -372,9 +370,9 @@ export default function Onboarding() {
 
         {/* Step 2: Preferences */}
         {step === 1 && (
-          <div ref={cardB} className={`${themeClasses.cardBg} rounded-2xl border p-6 shadow-xl`}>
+          <div ref={cardB} className={`${themeClasses.cardBg} rounded-2xl border p-6`}>
             <div className="flex items-center gap-3 mb-6">
-              <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'}`}>
+              <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-purple-500/20 border border-purple-500/30' : 'bg-purple-100 border border-purple-200'}`}>
                 <SparklesIcon className={`h-6 w-6 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
               </div>
               <div>
@@ -405,7 +403,7 @@ export default function Onboarding() {
                         onClick={() => setDevice(option.value)}
                         className={`${
                           isActive ? themeClasses.deviceCardActive : themeClasses.deviceCard
-                        } border rounded-xl p-4 text-center transition-all duration-200 hover:scale-105`}
+                        } border rounded-xl p-4 text-center transition-all duration-200 hover:scale-105 hover:shadow-md`}
                       >
                         <IconComponent className="h-6 w-6 mx-auto mb-2" />
                         <div className="text-sm font-medium">{option.label}</div>
@@ -424,7 +422,7 @@ export default function Onboarding() {
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as Language)}
-                  className={`w-full px-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                  className={`w-full px-4 py-3 ${themeClasses.input} border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30`}
                 >
                   <option value="English">English</option>
                   <option value="Hindi">हिंदी (Hindi)</option>
@@ -435,7 +433,7 @@ export default function Onboarding() {
             <div className="flex justify-between gap-4 mt-8">
               <button
                 onClick={back}
-                className={`px-6 py-3 ${themeClasses.buttonSecondary} rounded-xl font-medium transition-all duration-200 flex items-center gap-2`}
+                className={`px-6 py-3 ${themeClasses.buttonSecondary} rounded-xl font-medium transition-all duration-200 flex items-center gap-2 hover:scale-105`}
               >
                 <ArrowLeftIcon className="h-5 w-5" />
                 <span>Back</span>
@@ -444,7 +442,7 @@ export default function Onboarding() {
               <button
                 onClick={submit}
                 disabled={saving}
-                className={`px-6 py-3 ${themeClasses.buttonPrimary} rounded-xl font-medium transition-all duration-200 disabled:opacity-50 flex items-center gap-2`}
+                className={`px-6 py-3 ${themeClasses.buttonPrimary} rounded-xl font-medium transition-all duration-200 disabled:opacity-50 flex items-center gap-2 hover:scale-105`}
               >
                 {saving ? (
                   <>
