@@ -42,23 +42,82 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Enhanced session initialization
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session ?? null)
-    })
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
-      setSession(sess)
-    })
-    return () => { sub.subscription.unsubscribe() }
+    const initializeAuth = async () => {
+      try {
+        // Check for existing session
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('Session initialization error:', error)
+        }
+        
+        console.log('Initial session:', !!session)
+        setSession(session)
+        
+        // Process URL hash for OAuth callbacks
+        const processUrlHash = () => {
+          const hash = window.location.hash
+          if (hash && hash.includes('access_token')) {
+            console.log('Processing OAuth callback hash')
+            // Supabase will automatically handle the hash and trigger auth state change
+            // Clear the hash to clean up the URL
+            setTimeout(() => {
+              if (window.location.hash === hash) {
+                window.location.hash = ''
+              }
+            }, 100)
+          }
+        }
+        
+        processUrlHash()
+        
+      } catch (error) {
+        console.error('Auth initialization failed:', error)
+      }
+    }
+
+    initializeAuth()
+
+    // Enhanced auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change:', event, !!session)
+        
+        setSession(session)
+        
+        if (event === 'SIGNED_IN' && session) {
+          console.log('User signed in:', session.user.email)
+          // Small delay to ensure session is fully established
+          setTimeout(() => {
+            setLoading(false)
+          }, 100)
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out')
+          setProfile(null)
+          setLoading(false)
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          console.log('Token refreshed for:', session.user.email)
+        }
+      }
+    )
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
+  // Enhanced profile fetching
   const fetchProfile = async () => {
     if (!session?.user?.id) { 
-      setProfile(null); 
+      setProfile(null)
       return 
     }
     
     try {
+      console.log('Fetching profile for user:', session.user.id)
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -66,9 +125,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .maybeSingle()
       
       if (!error && data) {
+        console.log('Profile loaded:', data.name || data.email)
         setProfile(data as Profile)
-      } else {
+      } else if (error) {
         console.error('Profile fetch error:', error)
+        setProfile(null)
+      } else {
+        console.log('No profile found for user')
         setProfile(null)
       }
     } catch (err) {
@@ -77,35 +140,63 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
+  // Enhanced profile loading with better timing
   useEffect(() => {
-    const init = async () => {
+    const loadProfile = async () => {
       if (session?.user?.id) {
         await fetchProfile()
+      } else {
+        setProfile(null)
       }
-      setLoading(false)
+      
+      // Only set loading to false if we have a definitive state
+      if (!loading || !session) {
+        setLoading(false)
+      }
     }
-    init()
+
+    loadProfile()
   }, [session?.user?.id])
 
+  // Enhanced sign out with proper cleanup
+  const signOut = async () => {
+    try {
+      console.log('Signing out user...')
+      setLoading(true)
+      
+      await supabase.auth.signOut()
+      
+      // Clear state
+      setSession(null)
+      setProfile(null)
+      
+      console.log('User signed out successfully')
+    } catch (error) {
+      console.error('Sign out error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Memoized context value with enhanced dependencies
   const value = useMemo(() => ({
     session, 
     profile, 
     loading,
     refreshProfile: fetchProfile,
-    signOut: async () => { 
-      try {
-        await supabase.auth.signOut()
-        setProfile(null)
-      } catch (error) {
-        console.error('Sign out error:', error)
-      }
-    }
+    signOut
   }), [session, profile, loading])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 
-export const useAuth = () => useContext(Ctx)
+export const useAuth = () => {
+  const context = useContext(Ctx)
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider')
+  }
+  return context
+}
 
 // 🎯 EXPORT PROFILE TYPE FOR USE IN OTHER COMPONENTS
 export type { Profile }
