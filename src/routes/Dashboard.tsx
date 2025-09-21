@@ -10,8 +10,7 @@ import {
   ClockIcon,
   ArrowPathIcon,
   TvIcon,
-  FireIcon,
-  PlayIcon as PlayOutlineIcon
+  FireIcon
 } from '@heroicons/react/24/outline'
 import { PlayIcon } from '@heroicons/react/24/solid'
 import { globalTheme } from './AuthPage'
@@ -70,8 +69,7 @@ export default function Dashboard() {
     textMuted: 'text-slate-400',
     border: 'border-slate-700/50',
     accent: 'text-blue-400',
-    button: 'bg-blue-600 hover:bg-blue-700',
-    streamButton: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800'
+    button: 'bg-blue-600 hover:bg-blue-700'
   } : {
     bg: 'bg-gray-50',
     surface: 'bg-white/80',
@@ -81,8 +79,7 @@ export default function Dashboard() {
     textMuted: 'text-gray-500',
     border: 'border-gray-200/60',
     accent: 'text-blue-600',
-    button: 'bg-blue-600 hover:bg-blue-700',
-    streamButton: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800'
+    button: 'bg-blue-600 hover:bg-blue-700'
   }, [isDarkMode])
 
   // Optimized stats calculation with useMemo
@@ -208,14 +205,6 @@ export default function Dashboard() {
     }
   }, [refreshing, fetchMatches])
 
-  // Stream navigation with access granting
-  const handleStreamAccess = useCallback(() => {
-    // Grant stream access and navigate
-    sessionStorage.setItem('streamAccessAllowed', 'true')
-    sessionStorage.setItem('streamAccessTime', Date.now().toString())
-    navigate('/stream')
-  }, [navigate])
-
   // Memoized skeleton loader
   const SkeletonLoader = useMemo(() => (
     <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -244,7 +233,7 @@ export default function Dashboard() {
     <div className={`min-h-screen ${themeClasses.bg} transition-colors duration-300`}>
       <div ref={containerRef} className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         
-        {/* Enhanced Header with Stream Access */}
+        {/* Enhanced Header - Removed Live Stream Button */}
         <div ref={heroRef}>
           <div className={`${themeClasses.surface} ${themeClasses.border} border rounded-2xl backdrop-blur-sm p-4 sm:p-6`}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -262,14 +251,8 @@ export default function Dashboard() {
                 </div>
               </div>
               
+              {/* Only Refresh Button */}
               <div className="flex items-center gap-3">
-                {/* Stream Access Button */}
-                <button 
-                  onClick={handleStreamAccess}
-                  className={`${themeClasses.streamButton} text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 flex items-center gap-2 text-sm font-medium shadow-lg`}
-                >
-            
-                {/* Refresh Button */}
                 <button 
                   onClick={handleRefresh}
                   disabled={refreshing}
