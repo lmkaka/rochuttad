@@ -12,7 +12,7 @@ const Android: React.FC = () => {
       }}
     >
       <img 
-        src="https://radarxtv.site/" 
+        src="" 
         alt="" 
         style={{
           position: 'absolute',
