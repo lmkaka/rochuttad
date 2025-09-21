@@ -219,14 +219,8 @@ export default function AuthPage() {
     console.log('Current hostname:', hostname)
     console.log('Current origin:', origin)
     
-    // Production domains
-    if (hostname.includes('watchwithradar.live') || 
-        hostname.includes('onrender.com')) {
-      return `${origin}/dashboard`
-    }
-    
-    // Local development
-    return 'http://localhost:5173/dashboard'
+    // Always use auth/callback for Google OAuth
+    return `${origin}/auth/callback`
   }, [])
 
   // Optimized theme classes
@@ -268,54 +262,6 @@ export default function AuthPage() {
     return () => window.removeEventListener('themeChange', handleThemeChange as EventListener)
   }, [])
 
-  // Enhanced Auth State Management
-  useEffect(() => {
-    // Check for existing session on mount
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        console.log('Initial session check:', !!session)
-        
-        if (session && window.location.pathname === '/auth') {
-          console.log('User already logged in, redirecting...')
-          navigate('/dashboard', { replace: true })
-        }
-      } catch (error) {
-        console.error('Session check error:', error)
-      }
-    }
-    
-    checkSession()
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Global auth state change:', event, !!session)
-        
-        if (event === 'SIGNED_IN' && session) {
-          console.log('User signed in, redirecting to dashboard...')
-          
-          // Small delay to ensure proper state update
-          setTimeout(() => {
-            if (window.location.pathname === '/auth') {
-              navigate('/dashboard', { replace: true })
-            }
-          }, 500)
-        }
-        
-        if (event === 'SIGNED_OUT') {
-          console.log('User signed out')
-          setGoogleLoading(false)
-          setLoading(false)
-        }
-      }
-    )
-
-    return () => {
-      subscription?.unsubscribe()
-    }
-  }, [navigate])
-
   // Clear form when switching tabs
   const handleTabSwitch = useCallback((tab: 'signin' | 'signup' | 'forgot') => {
     setActiveTab(tab)
@@ -350,7 +296,9 @@ export default function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
-          options: { emailRedirectTo: getRedirectUrl() }
+          options: { 
+            emailRedirectTo: `${window.location.origin}/dashboard` 
+          }
         })
         
         if (error) throw error
@@ -402,7 +350,7 @@ export default function AuthPage() {
     }
   }
 
-  // Production-Ready Google OAuth
+  // Fixed Google OAuth - Always use direct redirect
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true)
     setError('')
@@ -428,56 +376,11 @@ export default function AuthPage() {
       }
 
       if (data?.url) {
-        console.log('Google OAuth URL generated:', data.url)
-        
-        // For production: Direct redirect (no popup)
-        if (window.location.hostname !== 'localhost') {
-          console.log('Production: Redirecting to Google OAuth')
-          window.location.href = data.url
-          return
-        }
-
-        // For localhost: Use popup method
-        console.log('Local: Opening Google OAuth popup')
-        
-        const popup = window.open(
-          data.url,
-          'google-signin',
-          'width=500,height=600,scrollbars=yes,resizable=yes,top=50,left=' + 
-          (window.screen.width / 2 - 250)
-        )
-
-        if (!popup) {
-          throw new Error('Popup blocked. Please allow popups for this site.')
-        }
-
-        const checkClosed = setInterval(() => {
-          if (popup?.closed) {
-            clearInterval(checkClosed)
-            setGoogleLoading(false)
-            
-            // Check session after popup closes
-            supabase.auth.getSession().then(({ data: { session } }) => {
-              console.log('Session after popup close:', !!session)
-              if (session) {
-                setSuccess('Successfully signed in with Google!')
-              } else {
-                setError('Google sign-in was cancelled.')
-              }
-            })
-          }
-        }, 1000)
-
-        // Cleanup timeout
-        setTimeout(() => {
-          if (popup && !popup.closed) {
-            popup.close()
-            clearInterval(checkClosed)
-            setGoogleLoading(false)
-            setError('Google sign-in timed out.')
-          }
-        }, 300000) // 5 minutes timeout
+        console.log('Redirecting to Google OAuth:', data.url)
+        // Direct redirect for both production and development
+        window.location.href = data.url
       }
+      
     } catch (err: any) {
       console.error('Google OAuth failed:', err)
       setError(err.message || 'Google sign in failed')
