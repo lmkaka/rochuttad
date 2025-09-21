@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate } from 'react-router-dom'
+import { Route, Routes, Navigate, useLocation } from 'react-router-dom'
 import AuthPage from './routes/AuthPage'
 import AuthCallback from './routes/AuthCallback'
 import Onboarding from './routes/Onboarding'
@@ -9,57 +9,203 @@ import AdminPanel from './routes/AdminPanel'
 import Profile from './routes/Profile'
 import Layout from './components/Layout'
 import { useAuth } from './context/AuthProvider'
-export default function App() {
-  const { session, profile } = useAuth()
 
+// Protected Route Component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, profile, loading } = useAuth()
+  const location = useLocation()
+  
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // Redirect to login if no session
+  if (!session) {
+    return <Navigate to="/auth" state={{ from: location }} replace />
+  }
+  
+  // Redirect to onboarding if session but no profile
+  if (session && !profile && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />
+  }
+  
+  return <>{children}</>
+}
+
+// Admin Protected Route
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, profile, loading } = useAuth()
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm">Checking permissions...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // Check if user is admin
+  if (!session || !profile || !profile.is_admin) {
+    return <Navigate to="/dashboard" replace />
+  }
+  
+  return <>{children}</>
+}
+
+// Public Route Component (only for auth-related pages)
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, profile, loading } = useAuth()
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // If user is already authenticated, redirect to appropriate page
+  if (session && profile) {
+    return <Navigate to="/dashboard" replace />
+  }
+  
+  if (session && !profile) {
+    return <Navigate to="/onboarding" replace />
+  }
+  
+  return <>{children}</>
+}
+
+export default function App() {
+  const { session, profile, loading } = useAuth()
+  
   return (
     <Layout>
       <Routes>
-        {/* Auth Routes */}
+        {/* Public Routes - Only accessible when NOT logged in */}
         <Route 
           path="/auth" 
-          element={session ? <Navigate to={profile ? '/dashboard' : '/onboarding'} /> : <AuthPage />} 
+          element={
+            <PublicRoute>
+              <AuthPage />
+            </PublicRoute>
+          } 
         />
         
-        {/* Auth Callback Route for Google OAuth */}
         <Route 
           path="/auth/callback" 
           element={<AuthCallback />} 
         />
         
-        {/* Onboarding Route */}
+        <Route 
+          path="/reset-password" 
+          element={
+            <PublicRoute>
+              <ResetPassword />
+            </PublicRoute>
+          } 
+        />
+        
+        {/* Protected Routes - Only accessible when logged in */}
         <Route 
           path="/onboarding" 
-          element={session ? (profile ? <Navigate to="/dashboard" /> : <Onboarding />) : <Navigate to="/auth" />} 
+          element={
+            session ? (
+              profile ? <Navigate to="/dashboard" replace /> : <Onboarding />
+            ) : (
+              <Navigate to="/auth" replace />
+            )
+          } 
         />
         
-        {/* Dashboard Route */}
         <Route 
           path="/dashboard" 
-          element={session ? (profile ? <Dashboard /> : <Navigate to="/onboarding" />) : <Navigate to="/auth" />} 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
         />
         
-        {/* Profile Route */}
         <Route 
           path="/profile" 
-          element={session ? (profile ? <Profile /> : <Navigate to="/onboarding" />) : <Navigate to="/auth" />} 
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } 
         />
         
-        {/* Admin Panel Route */}
+        <Route 
+          path="/stream" 
+          element={
+            <ProtectedRoute>
+              <StreamPage />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Admin Route - Only for admin users */}
         <Route 
           path="/admin" 
-          element={<AdminPanel />} 
+          element={
+            <AdminRoute>
+              <AdminPanel />
+            </AdminRoute>
+          } 
         />
         
-        {/* Default Route */}
+        {/* Default Route - Redirect based on auth status */}
+        <Route 
+          path="/" 
+          element={
+            loading ? (
+              <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+                <div className="text-center text-white">
+                  <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                  <p className="text-sm">Loading...</p>
+                </div>
+              </div>
+            ) : session ? (
+              profile ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
+            ) : (
+              <Navigate to="/auth" replace />
+            )
+          } 
+        />
+        
+        {/* Catch-all Route - Redirect to dashboard or auth */}
         <Route 
           path="*" 
-          element={<Navigate to="/dashboard" />} 
+          element={
+            loading ? (
+              <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+                <div className="text-center text-white">
+                  <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                  <p className="text-sm">Loading...</p>
+                </div>
+              </div>
+            ) : session ? (
+              profile ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />
+            ) : (
+              <Navigate to="/auth" replace />
+            )
+          } 
         />
-
-        <Route path="/reset-password" element={<ResetPassword />} />
-        
-        <Route path="/stream" element={<StreamPage />} />
       </Routes>
     </Layout>
   )
