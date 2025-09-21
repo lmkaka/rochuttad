@@ -1,4 +1,5 @@
-import { Route, Routes, Navigate, useLocation, useEffect, useState } from 'react-router-dom'
+import { Route, Routes, Navigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import AuthPage from './routes/AuthPage'
 import AuthCallback from './routes/AuthCallback'
 import Onboarding from './routes/Onboarding'
@@ -49,7 +50,6 @@ const StreamAccessTracker = {
 // Protected Stream Component
 const ProtectedStreamRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, profile } = useAuth()
-  const location = useLocation()
   const [accessChecked, setAccessChecked] = useState(false)
   
   useEffect(() => {
