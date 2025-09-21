@@ -22,10 +22,10 @@ type Props = {
 export default function MatchCard({ match, device, language, index }: Props) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [isDarkMode, setIsDarkMode] = useState(globalTheme.isDarkMode)
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+  const [screenSize, setScreenSize] = useState(window.innerWidth)
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    const handleResize = () => setScreenSize(window.innerWidth)
     const handleThemeChange = (event: CustomEvent) => setIsDarkMode(event.detail.isDarkMode)
     
     window.addEventListener('resize', handleResize)
@@ -36,6 +36,11 @@ export default function MatchCard({ match, device, language, index }: Props) {
       window.removeEventListener('themeChange', handleThemeChange as EventListener)
     }
   }, [])
+
+  // Responsive breakpoints
+  const isMobile = screenSize < 768
+  const isTablet = screenSize >= 768 && screenSize < 1024
+  const isDesktop = screenSize >= 1024
 
   const themeClasses = useMemo(() => isDarkMode ? {
     card: 'bg-slate-800/95 border-slate-700',
@@ -127,11 +132,15 @@ export default function MatchCard({ match, device, language, index }: Props) {
   }
 
   const getActionButton = () => {
+    const baseClasses = `px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+      isMobile ? 'justify-center' : ''
+    }`
+    
     if (isLive && link) {
       return (
         <button 
           onClick={handleClick}
-          className={`${themeClasses.liveButton} px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2`}
+          className={`${themeClasses.liveButton} ${baseClasses}`}
         >
           <PlayIcon className="w-4 h-4" />
           Watch
@@ -140,7 +149,7 @@ export default function MatchCard({ match, device, language, index }: Props) {
     } else if (isUpcoming) {
       return (
         <button 
-          className={`${themeClasses.upcomingButton} px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2`}
+          className={`${themeClasses.upcomingButton} ${baseClasses}`}
         >
           <CalendarIcon className="w-4 h-4" />
           {getTimeUntilMatch()}
@@ -150,7 +159,7 @@ export default function MatchCard({ match, device, language, index }: Props) {
       return (
         <button 
           onClick={handleClick}
-          className={`${themeClasses.liveButton} px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2`}
+          className={`${themeClasses.liveButton} ${baseClasses}`}
         >
           <PlayOutlineIcon className="w-4 h-4" />
           Replay
@@ -159,7 +168,7 @@ export default function MatchCard({ match, device, language, index }: Props) {
     } else {
       return (
         <button 
-          className={`${themeClasses.disabledButton} px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2`}
+          className={`${themeClasses.disabledButton} ${baseClasses}`}
         >
           <ExclamationTriangleIcon className="w-4 h-4" />
           N/A
@@ -168,184 +177,238 @@ export default function MatchCard({ match, device, language, index }: Props) {
     }
   }
 
+  // Team name truncation based on screen size
+  const truncateTeamName = (name: string) => {
+    if (isMobile && name.length > 12) {
+      return name.slice(0, 12) + '...'
+    } else if (isTablet && name.length > 15) {
+      return name.slice(0, 15) + '...'
+    }
+    return name
+  }
+
+  // Dynamic sizing based on screen size
+  const getTeamLogoSize = () => {
+    if (isMobile) return 'w-12 h-12'
+    if (isTablet) return 'w-14 h-14'
+    return 'w-16 h-16'
+  }
+
+  const getTeamTextSize = () => {
+    if (isMobile) return 'text-sm'
+    if (isTablet) return 'text-base'
+    return 'text-lg'
+  }
+
+  const getCardPadding = () => {
+    if (isMobile) return 'p-4'
+    if (isTablet) return 'p-5'
+    return 'p-6'
+  }
+
   return (
     <div 
       ref={cardRef}
       className={`${themeClasses.card} rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer`}
       onClick={handleClick}
     >
-      {/* Mobile Layout */}
-      {isMobile ? (
-        <div className="p-4">
-          {/* Header - Status & Time */}
-          <div className="flex items-center justify-between mb-4">
-            {getStatusBadge()}
-            <div className={`${themeClasses.timeContainer} px-3 py-1 rounded-lg`}>
-              <div className="flex items-center gap-1">
-                <ClockIcon className="w-4 h-4" />
-                <span className={`${themeClasses.text} text-sm font-medium`}>
-                  {formatMatchTime(match.match_time)}
-                </span>
-              </div>
-              {isUpcoming && (
-                <div className={`${themeClasses.textMuted} text-xs text-center mt-1`}>
-                  in {getTimeUntilMatch()}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Teams */}
-          <div className="flex items-center gap-4 mb-4">
-            {/* Team 1 */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                {match.team1_logo ? (
-                  <img 
-                    src={match.team1_logo} 
-                    className="w-12 h-12 rounded-lg object-cover"
-                    alt={match.team1_name}
-                    onError={(e) => e.currentTarget.style.display = 'none'}
-                  />
-                ) : (
-                  <div className={`w-12 h-12 rounded-lg ${themeClasses.teamContainer} flex items-center justify-center`}>
-                    <span className={`${themeClasses.text} text-lg font-bold`}>
-                      {match.team1_name.charAt(0)}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <h3 className={`${themeClasses.text} font-semibold text-sm leading-tight`}>
-                    {match.team1_name.length > 12 ? match.team1_name.slice(0, 12) + '...' : match.team1_name}
-                  </h3>
-                  <p className={`${themeClasses.textMuted} text-xs`}>HOME</p>
-                </div>
-              </div>
-            </div>
-
-            {/* VS */}
-            <div className={`${themeClasses.teamContainer} px-3 py-1 rounded-lg`}>
-              <span className={`${themeClasses.text} text-sm font-bold`}>VS</span>
-            </div>
-
-            {/* Team 2 */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 justify-end text-right">
-                <div>
-                  <h3 className={`${themeClasses.text} font-semibold text-sm leading-tight`}>
-                    {match.team2_name.length > 12 ? match.team2_name.slice(0, 12) + '...' : match.team2_name}
-                  </h3>
-                  <p className={`${themeClasses.textMuted} text-xs`}>AWAY</p>
-                </div>
-                {match.team2_logo ? (
-                  <img 
-                    src={match.team2_logo} 
-                    className="w-12 h-12 rounded-lg object-cover"
-                    alt={match.team2_name}
-                    onError={(e) => e.currentTarget.style.display = 'none'}
-                  />
-                ) : (
-                  <div className={`w-12 h-12 rounded-lg ${themeClasses.teamContainer} flex items-center justify-center`}>
-                    <span className={`${themeClasses.text} text-lg font-bold`}>
-                      {match.team2_name.charAt(0)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Action Button */}
-          <div className="flex justify-center">
-            {getActionButton()}
-          </div>
-        </div>
-      ) : (
-        /* Desktop Layout */
-        <div className="p-6">
-          <div className="flex items-center justify-between">
-            {/* Teams Section */}
-            <div className="flex items-center gap-6 flex-1">
-              {/* Team 1 */}
-              <div className="flex items-center gap-3">
-                {match.team1_logo ? (
-                  <img 
-                    src={match.team1_logo} 
-                    className="w-16 h-16 rounded-lg object-cover"
-                    alt={match.team1_name}
-                    onError={(e) => e.currentTarget.style.display = 'none'}
-                  />
-                ) : (
-                  <div className={`w-16 h-16 rounded-lg ${themeClasses.teamContainer} flex items-center justify-center`}>
-                    <span className={`${themeClasses.text} text-xl font-bold`}>
-                      {match.team1_name.charAt(0)}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <h3 className={`${themeClasses.text} font-semibold leading-tight`}>
-                    {match.team1_name}
-                  </h3>
-                  <p className={`${themeClasses.textMuted} text-sm`}>HOME</p>
-                </div>
-              </div>
-
-              {/* VS */}
-              <div className={`${themeClasses.teamContainer} px-4 py-2 rounded-lg`}>
-                <span className={`${themeClasses.text} font-bold`}>VS</span>
-              </div>
-
-              {/* Team 2 */}
-              <div className="flex items-center gap-3">
-                {match.team2_logo ? (
-                  <img 
-                    src={match.team2_logo} 
-                    className="w-16 h-16 rounded-lg object-cover"
-                    alt={match.team2_name}
-                    onError={(e) => e.currentTarget.style.display = 'none'}
-                  />
-                ) : (
-                  <div className={`w-16 h-16 rounded-lg ${themeClasses.teamContainer} flex items-center justify-center`}>
-                    <span className={`${themeClasses.text} text-xl font-bold`}>
-                      {match.team2_name.charAt(0)}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <h3 className={`${themeClasses.text} font-semibold leading-tight`}>
-                    {match.team2_name}
-                  </h3>
-                  <p className={`${themeClasses.textMuted} text-sm`}>AWAY</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Section */}
-            <div className="flex items-center gap-4">
-              {/* Time */}
-              <div className={`${themeClasses.timeContainer} px-4 py-3 rounded-lg text-center`}>
-                <div className="flex items-center gap-2 justify-center mb-1">
+      <div className={getCardPadding()}>
+        {/* Mobile Layout */}
+        {isMobile ? (
+          <>
+            {/* Header - Status & Time */}
+            <div className="flex items-center justify-between mb-4">
+              {getStatusBadge()}
+              <div className={`${themeClasses.timeContainer} px-3 py-1 rounded-lg`}>
+                <div className="flex items-center gap-1">
                   <ClockIcon className="w-4 h-4" />
-                  <span className={`${themeClasses.text} font-semibold`}>
+                  <span className={`${themeClasses.text} text-sm font-medium`}>
                     {formatMatchTime(match.match_time)}
                   </span>
                 </div>
                 {isUpcoming && (
-                  <div className={`${themeClasses.textMuted} text-xs`}>
+                  <div className={`${themeClasses.textMuted} text-xs text-center mt-1`}>
                     in {getTimeUntilMatch()}
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Status & Button */}
-              <div className="flex flex-col items-end gap-2">
-                {getStatusBadge()}
-                {getActionButton()}
+            {/* Teams */}
+            <div className="flex items-center gap-4 mb-4">
+              {/* Team 1 */}
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  {match.team1_logo ? (
+                    <img 
+                      src={match.team1_logo} 
+                      className={`${getTeamLogoSize()} rounded-lg object-cover`}
+                      alt={match.team1_name}
+                      onError={(e) => e.currentTarget.style.display = 'none'}
+                    />
+                  ) : (
+                    <div className={`${getTeamLogoSize()} rounded-lg ${themeClasses.teamContainer} flex items-center justify-center`}>
+                      <span className={`${themeClasses.text} text-lg font-bold`}>
+                        {match.team1_name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <h3 className={`${themeClasses.text} font-semibold ${getTeamTextSize()} leading-tight`}>
+                      {truncateTeamName(match.team1_name)}
+                    </h3>
+                    <p className={`${themeClasses.textMuted} text-xs`}>HOME</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* VS */}
+              <div className={`${themeClasses.teamContainer} px-3 py-1 rounded-lg`}>
+                <span className={`${themeClasses.text} text-sm font-bold`}>VS</span>
+              </div>
+
+              {/* Team 2 */}
+              <div className="flex-1">
+                <div className="flex items-center gap-3 justify-end text-right">
+                  <div>
+                    <h3 className={`${themeClasses.text} font-semibold ${getTeamTextSize()} leading-tight`}>
+                      {truncateTeamName(match.team2_name)}
+                    </h3>
+                    <p className={`${themeClasses.textMuted} text-xs`}>AWAY</p>
+                  </div>
+                  {match.team2_logo ? (
+                    <img 
+                      src={match.team2_logo} 
+                      className={`${getTeamLogoSize()} rounded-lg object-cover`}
+                      alt={match.team2_name}
+                      onError={(e) => e.currentTarget.style.display = 'none'}
+                    />
+                  ) : (
+                    <div className={`${getTeamLogoSize()} rounded-lg ${themeClasses.teamContainer} flex items-center justify-center`}>
+                      <span className={`${themeClasses.text} text-lg font-bold`}>
+                        {match.team2_name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Action Button */}
+            <div className="flex justify-center">
+              {getActionButton()}
+            </div>
+          </>
+        ) : (
+          /* Tablet & Desktop Layout */
+          <div className={`flex items-center ${isDesktop ? 'justify-between' : 'gap-4'}`}>
+            {/* Teams Section */}
+            <div className={`flex items-center ${isDesktop ? 'gap-8' : 'gap-6'} flex-1 ${isTablet ? 'justify-center' : ''}`}>
+              {/* Team 1 */}
+              <div className="flex items-center gap-4">
+                {match.team1_logo ? (
+                  <img 
+                    src={match.team1_logo} 
+                    className={`${getTeamLogoSize()} rounded-lg object-cover`}
+                    alt={match.team1_name}
+                    onError={(e) => e.currentTarget.style.display = 'none'}
+                  />
+                ) : (
+                  <div className={`${getTeamLogoSize()} rounded-lg ${themeClasses.teamContainer} flex items-center justify-center`}>
+                    <span className={`${themeClasses.text} ${isDesktop ? 'text-2xl' : 'text-xl'} font-bold`}>
+                      {match.team1_name.charAt(0)}
+                    </span>
+                  </div>
+                )}
+                <div className={isTablet ? 'text-center' : ''}>
+                  <h3 className={`${themeClasses.text} font-semibold ${getTeamTextSize()} leading-tight`}>
+                    {truncateTeamName(match.team1_name)}
+                  </h3>
+                  <p className={`${themeClasses.textMuted} ${isDesktop ? 'text-sm' : 'text-xs'}`}>HOME</p>
+                </div>
+              </div>
+
+              {/* VS */}
+              <div className={`${themeClasses.teamContainer} ${isDesktop ? 'px-6 py-3' : 'px-4 py-2'} rounded-lg`}>
+                <span className={`${themeClasses.text} ${isDesktop ? 'text-xl' : 'text-lg'} font-bold`}>VS</span>
+              </div>
+
+              {/* Team 2 */}
+              <div className="flex items-center gap-4">
+                {match.team2_logo ? (
+                  <img 
+                    src={match.team2_logo} 
+                    className={`${getTeamLogoSize()} rounded-lg object-cover`}
+                    alt={match.team2_name}
+                    onError={(e) => e.currentTarget.style.display = 'none'}
+                  />
+                ) : (
+                  <div className={`${getTeamLogoSize()} rounded-lg ${themeClasses.teamContainer} flex items-center justify-center`}>
+                    <span className={`${themeClasses.text} ${isDesktop ? 'text-2xl' : 'text-xl'} font-bold`}>
+                      {match.team2_name.charAt(0)}
+                    </span>
+                  </div>
+                )}
+                <div className={isTablet ? 'text-center' : ''}>
+                  <h3 className={`${themeClasses.text} font-semibold ${getTeamTextSize()} leading-tight`}>
+                    {truncateTeamName(match.team2_name)}
+                  </h3>
+                  <p className={`${themeClasses.textMuted} ${isDesktop ? 'text-sm' : 'text-xs'}`}>AWAY</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Section - Desktop Only */}
+            {isDesktop && (
+              <div className="flex items-center gap-6">
+                {/* Time */}
+                <div className={`${themeClasses.timeContainer} px-4 py-3 rounded-lg text-center min-w-[140px]`}>
+                  <div className="flex items-center gap-2 justify-center mb-1">
+                    <ClockIcon className="w-4 h-4" />
+                    <span className={`${themeClasses.text} font-semibold`}>
+                      {formatMatchTime(match.match_time)}
+                    </span>
+                  </div>
+                  {isUpcoming && (
+                    <div className={`${themeClasses.textMuted} text-xs`}>
+                      in {getTimeUntilMatch()}
+                    </div>
+                  )}
+                </div>
+
+                {/* Status & Button */}
+                <div className="flex flex-col items-center gap-3">
+                  {getStatusBadge()}
+                  {getActionButton()}
+                </div>
+              </div>
+            )}
+
+            {/* Bottom Section - Tablet Only */}
+            {isTablet && (
+              <div className="flex flex-col items-center gap-3 min-w-[160px]">
+                <div className={`${themeClasses.timeContainer} px-4 py-2 rounded-lg text-center w-full`}>
+                  <div className="flex items-center gap-2 justify-center mb-1">
+                    <ClockIcon className="w-4 h-4" />
+                    <span className={`${themeClasses.text} font-semibold text-sm`}>
+                      {formatMatchTime(match.match_time)}
+                    </span>
+                  </div>
+                  {isUpcoming && (
+                    <div className={`${themeClasses.textMuted} text-xs`}>
+                      in {getTimeUntilMatch()}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  {getStatusBadge()}
+                  {getActionButton()}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
