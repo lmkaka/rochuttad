@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Bitmovin Player Fullscreen</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/bitmovin-player@8/bitmovinplayer.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: black;
+    }
+    #player {
+      width: 100%;
+      height: 100%;
+    }
+    .bmpui-ui-watermark {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="player"></div>
+
+  <script>
+    const playerConfig = {
+      key: '90f78acb-6226-4dc9-9ddd-7dda84143e50', // tumhara Bitmovin license key
+      analytics: {
+        key: '8f54bbf3-e230-40fd-aecd-97d36a58585a',
+        videoId: "Live-1342",
+        title: "Live Channel"
+      },
+      playback: {
+        autoplay: true,
+        muted: false
+      },
+      style: {
+        width: "100%",
+        height: "100%"
+      }
+    };
+
+    // 👇 Default source (HLS link)
+    const sourceConfig = {
+      hls: "https://d3lyx96yjhs311.cloudfront.net/out/v1/fbf31a2968cf44e9b1c15e0f07a9d0ee/index_5.m3u8"
+    };
+
+    const player = new bitmovin.player.Player(document.getElementById("player"), playerConfig);
+    player.load(sourceConfig).then(() => {
+      console.log("Stream loaded successfully");
+    }).catch(e => {
+      console.error("Failed to load stream:", e);
+      document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:20%'>Stream failed to load</h2>";
+    });
+  </script>
+</body>
+</html>
