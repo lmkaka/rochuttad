@@ -14,7 +14,7 @@ const Ios: React.FC = () => {
       iframe.setAttribute('allow', 'encrypted-media');
       iframe.setAttribute('allowFullScreen', 'true');
       iframe.setAttribute('scrolling', 'no');
-      iframe.setAttribute('src', 'https://tataplay.slivcdn.com/hls/live/2020591/TEN3HD/master_3500.m3u8');
+      iframe.setAttribute('src', 'https://dish.slivcdn.com/hls/live/2020591/TEN3HD/master_3500.m3u8');
       
       // Style the iframe
       iframe.style.position = 'absolute';
