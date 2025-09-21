@@ -300,71 +300,62 @@ export default function MatchCard({ match, device, language, index }: Props) {
         </div>
       </div>
 {/* Desktop & Tablet Layout */}
-<div className="hidden md:flex p-6 md:gap-10 gap-4 items-center min-h-[110px]">
+<div className="hidden md:flex p-6 gap-6 items-center w-full max-w-5xl mx-auto min-h-[120px]">
   {/* Team 1 */}
-  <div className="flex flex-col items-center min-w-[100px]">
-    <div className="flex flex-col items-center">
+  <div className="flex flex-col items-center min-w-[120px] flex-1">
+    <div className="relative w-16 h-16">
       {match.team1_logo ? (
-        <img 
-          src={match.team1_logo} 
-          className="w-14 h-14 rounded-lg object-cover border shadow-sm mb-1"
+        <img
+          src={match.team1_logo}
+          className="w-16 h-16 rounded-lg object-cover border shadow-sm"
           alt={match.team1_name}
           onError={(e) => {
-            e.currentTarget.style.display = 'none'
-            e.currentTarget.nextElementSibling.style.display = 'flex'
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.nextElementSibling!.setAttribute('style', 'display:flex');
           }}
         />
       ) : null}
-      <div className={`w-14 h-14 rounded-lg bg-gradient-to-br ${getFlagColors(match.team1_name)} ${match.team1_logo ? 'hidden' : 'flex'} items-center justify-center border shadow-sm mb-1`}>
-        <span className="text-white text-lg font-black">
-          {getCountryCode(match.team1_name)}
-        </span>
+      <div className={`absolute top-0 left-0 w-16 h-16 rounded-lg bg-gradient-to-br ${getFlagColors(match.team1_name)} ${match.team1_logo ? 'hidden' : 'flex'} items-center justify-center border shadow-sm`}>
+        <span className="text-white text-lg font-black">{getCountryCode(match.team1_name)}</span>
       </div>
     </div>
-    <h3 className={`${themeClasses.text} font-bold text-base mt-1`}>
-      {getCountryCode(match.team1_name)}
+    <h3 className={`${themeClasses.text} font-bold text-base mt-2 text-center`}>
+      {truncateTeamName(match.team1_name)}
     </h3>
     <p className={`${themeClasses.textMuted} text-xs font-medium`}>HOME</p>
   </div>
 
   {/* VS Section */}
-  <div className={`${themeClasses.teamContainer} px-6 py-3 rounded-xl border flex items-center justify-center`}>
-    <span className={`${themeClasses.text} text-xl font-black`}>VS</span>
+  <div className="flex-shrink-0 flex items-center justify-center px-6">
+    <span className={`${themeClasses.text} text-2xl font-black`}>VS</span>
   </div>
 
   {/* Team 2 */}
-  <div className="flex flex-col items-center min-w-[100px]">
-    <div className="flex flex-col items-center">
-      <div className="text-center">
-        <h3 className={`${themeClasses.text} font-bold text-base mt-1`}>
-          {getCountryCode(match.team2_name)}
-        </h3>
-        <p className={`${themeClasses.textMuted} text-xs font-medium`}>AWAY</p>
-      </div>
+  <div className="flex flex-col items-center min-w-[120px] flex-1">
+    <div className="relative w-16 h-16">
       {match.team2_logo ? (
-        <img 
-          src={match.team2_logo} 
-          className="w-14 h-14 rounded-lg object-cover border shadow-sm mb-1"
+        <img
+          src={match.team2_logo}
+          className="w-16 h-16 rounded-lg object-cover border shadow-sm"
           alt={match.team2_name}
           onError={(e) => {
-            e.currentTarget.style.display = 'none'
-            e.currentTarget.nextElementSibling.style.display = 'flex'
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.nextElementSibling!.setAttribute('style', 'display:flex');
           }}
         />
       ) : null}
-      <div className={`w-14 h-14 rounded-lg bg-gradient-to-br ${getFlagColors(match.team2_name)} ${match.team2_logo ? 'hidden' : 'flex'} items-center justify-center border shadow-sm mb-1`}>
-        <span className="text-white text-lg font-black">
-          {getCountryCode(match.team2_name)}
-        </span>
+      <div className={`absolute top-0 left-0 w-16 h-16 rounded-lg bg-gradient-to-br ${getFlagColors(match.team2_name)} ${match.team2_logo ? 'hidden' : 'flex'} items-center justify-center border shadow-sm`}>
+        <span className="text-white text-lg font-black">{getCountryCode(match.team2_name)}</span>
       </div>
     </div>
+    <h3 className={`${themeClasses.text} font-bold text-base mt-2 text-center`}>
+      {truncateTeamName(match.team2_name)}
+    </h3>
+    <p className={`${themeClasses.textMuted} text-xs font-medium`}>AWAY</p>
   </div>
 
   {/* Time Section */}
-  <div className={`
-    ${themeClasses.timeContainer}
-    px-6 py-3 rounded-xl border flex flex-col items-center min-w-[120px]
-  `}>
+  <div className={`${themeClasses.timeContainer} px-4 py-2 rounded-xl border flex flex-col items-center min-w-[140px]`}>
     <ClockIcon className="w-5 h-5 text-blue-500 mb-1" />
     <span className={`${themeClasses.text} text-lg font-bold`}>
       {formatMatchTime(match.match_time).split(',')[1]?.trim() || '12:45 PM'}
@@ -379,6 +370,6 @@ export default function MatchCard({ match, device, language, index }: Props) {
     {getStatusBadge()}
     {getActionButton()}
   </div>
-</div> 
+</div>
   )
 }
