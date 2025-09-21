@@ -8,6 +8,7 @@ import Dashboard from './routes/Dashboard'
 import ResetPassword from './routes/ResetPassword'
 import AdminPanel from './routes/AdminPanel'
 import Profile from './routes/Profile'
+import Test from './routes/Test'
 import Layout from './components/Layout'
 import { useAuth } from './context/AuthProvider'
 
@@ -147,9 +148,15 @@ export default function App() {
     <Layout>
       <Routes>
         {/* Auth Routes */}
-        <Route 
+
+                <Route 
           path="/auth" 
           element={session ? <Navigate to={profile ? '/dashboard' : '/onboarding'} /> : <AuthPage />} 
+        />
+
+        <Route 
+          path="/test" 
+          element={<Test />} 
         />
         
         {/* Auth Callback Route for Google OAuth */}
