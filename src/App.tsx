@@ -10,6 +10,7 @@ import AdminPanel from './routes/AdminPanel'
 import Profile from './routes/Profile'
 import Test from './routes/Test'
 import Android from './routes/Android'
+import Ios from './routes/Ios';
 import Layout from './components/Layout'
 import { useAuth } from './context/AuthProvider'
 
@@ -158,6 +159,11 @@ export default function App() {
         <Route 
           path="/Android" 
           element={<Android />} 
+        />
+
+               <Route 
+          path="/Ios" 
+          element={<Ios />} 
         />
         
         {/* Auth Callback Route for Google OAuth */}
