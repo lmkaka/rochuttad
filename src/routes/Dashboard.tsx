@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthProvider'
 import MatchCard from '../components/MatchCard'
@@ -9,7 +10,8 @@ import {
   ClockIcon,
   ArrowPathIcon,
   TvIcon,
-  FireIcon
+  FireIcon,
+  PlayIcon as PlayOutlineIcon
 } from '@heroicons/react/24/outline'
 import { PlayIcon } from '@heroicons/react/24/solid'
 import { globalTheme } from './AuthPage'
@@ -29,16 +31,26 @@ type Match = {
   desktoplinkenglish: string | null
 }
 
+type MatchStats = {
+  total: number
+  upcoming: number
+  live: number
+  today: number
+}
+
 export default function Dashboard() {
   const { profile } = useAuth()
+  const navigate = useNavigate()
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(globalTheme.isDarkMode)
   const containerRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLDivElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
 
+  // Optimized theme change handler
   useEffect(() => {
     const handleThemeChange = (event: CustomEvent) => {
       setIsDarkMode(event.detail.isDarkMode)
@@ -48,7 +60,7 @@ export default function Dashboard() {
     return () => window.removeEventListener('themeChange', handleThemeChange as EventListener)
   }, [])
 
-  // Simple and sober design system
+  // Memoized theme classes for better performance
   const themeClasses = useMemo(() => isDarkMode ? {
     bg: 'bg-slate-900',
     surface: 'bg-slate-800/50',
@@ -59,6 +71,7 @@ export default function Dashboard() {
     border: 'border-slate-700/50',
     accent: 'text-blue-400',
     button: 'bg-blue-600 hover:bg-blue-700',
+    streamButton: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800'
   } : {
     bg: 'bg-gray-50',
     surface: 'bg-white/80',
@@ -69,50 +82,76 @@ export default function Dashboard() {
     border: 'border-gray-200/60',
     accent: 'text-blue-600',
     button: 'bg-blue-600 hover:bg-blue-700',
+    streamButton: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800'
   }, [isDarkMode])
 
-  // Simple entrance animations
-  useGSAP(() => {
-    if (!containerRef.current || !heroRef.current || !statsRef.current || !gridRef.current) return
-
-    const tl = gsap.timeline()
+  // Optimized stats calculation with useMemo
+  const matchStats = useMemo((): MatchStats => {
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)
     
-    // Simple fade in animations
-    tl.fromTo(heroRef.current, 
-      { opacity: 0, y: 20 }, 
-      { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }
-    )
-    .fromTo(statsRef.current, 
-      { opacity: 0, y: 20 }, 
-      { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.3'
-    )
-    .fromTo(gridRef.current, 
-      { opacity: 0, y: 20 }, 
-      { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.3'
-    )
+    let upcoming = 0
+    let live = 0
+    let today = 0
+    
+    matches.forEach(match => {
+      const matchTime = new Date(match.match_time)
+      
+      // Today's matches
+      if (matchTime >= todayStart && matchTime < todayEnd) {
+        today++
+      }
+      
+      // Live matches (started within last 6 hours)
+      const timeDiff = now.getTime() - matchTime.getTime()
+      if (timeDiff >= 0 && timeDiff <= 6 * 60 * 60 * 1000) {
+        live++
+      }
+      
+      // Upcoming matches
+      if (matchTime > now) {
+        upcoming++
+      }
+    })
+    
+    return {
+      total: matches.length,
+      upcoming,
+      live,
+      today
+    }
+  }, [matches])
+
+  // Optimized data fetching
+  const fetchMatches = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true)
+      
+      const { data, error } = await supabase
+        .from('matches')
+        .select('*')
+        .order('match_time', { ascending: true })
+        .limit(100)
+      
+      if (!error && data) {
+        setMatches(data)
+      } else {
+        console.error('Error fetching matches:', error)
+      }
+    } catch (error) {
+      console.error('Error loading matches:', error)
+    } finally {
+      setLoading(false)
+      if (isRefresh) setRefreshing(false)
+    }
   }, [])
 
+  // Initial load and real-time subscription
   useEffect(() => {
-    const load = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('matches')
-          .select('*')
-          .order('match_time', { ascending: true })
-          .limit(100)
-        
-        if (!error && data) {
-          setMatches(data)
-        }
-      } catch (error) {
-        console.error('Error loading matches:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    load()
-
+    fetchMatches()
+    
+    // Real-time subscription with throttling
     const channel = supabase
       .channel('matches_changes')
       .on('postgres_changes', { 
@@ -120,54 +159,92 @@ export default function Dashboard() {
         schema: 'public', 
         table: 'matches' 
       }, () => {
-        load() // Reload on changes
+        // Debounce updates to prevent excessive re-renders
+        setTimeout(() => fetchMatches(), 500)
       })
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchMatches])
 
+  // Optimized animations with reduced motion check
+  useGSAP(() => {
+    if (!containerRef.current || !heroRef.current || !statsRef.current || !gridRef.current) return
+    
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    
+    if (prefersReducedMotion) {
+      // Skip animations for users who prefer reduced motion
+      return
+    }
+    
+    const tl = gsap.timeline()
+    
+    tl.fromTo(heroRef.current, 
+      { opacity: 0, y: 20 }, 
+      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+    )
+    .fromTo(statsRef.current, 
+      { opacity: 0, y: 15 }, 
+      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.2'
+    )
+    .fromTo(gridRef.current, 
+      { opacity: 0, y: 15 }, 
+      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.2'
+    )
+  }, [loading])
+
+  // User preferences
   const userDevice = profile?.device_preference || 'Android'
   const userLanguage = profile?.language_preference || 'English'
 
-  const forceReload = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('matches')
-        .select('*')
-        .order('match_time', { ascending: true })
-      
-      if (!error && data) {
-        setMatches(data)
-      }
-    } catch (error) {
-      console.error('Error reloading:', error)
-    } finally {
-      setLoading(false)
+  // Manual refresh handler
+  const handleRefresh = useCallback(() => {
+    if (!refreshing) {
+      fetchMatches(true)
     }
-  }
+  }, [refreshing, fetchMatches])
 
-  // Simple stats calculations
-  const now = new Date()
-  const upcomingMatches = matches.filter(m => new Date(m.match_time) > now).length
-  const liveMatches = matches.filter(m => {
-    const matchTime = new Date(m.match_time)
-    const timeDiff = now.getTime() - matchTime.getTime()
-    return timeDiff >= 0 && timeDiff <= 6 * 60 * 60 * 1000 // Within 6 hours
-  }).length
-  const todayMatches = matches.filter(m => {
-    const matchDate = new Date(m.match_time).toDateString()
-    return matchDate === now.toDateString()
-  }).length
+  // Stream navigation with access granting
+  const handleStreamAccess = useCallback(() => {
+    // Grant stream access and navigate
+    sessionStorage.setItem('streamAccessAllowed', 'true')
+    sessionStorage.setItem('streamAccessTime', Date.now().toString())
+    navigate('/stream')
+  }, [navigate])
+
+  // Memoized skeleton loader
+  const SkeletonLoader = useMemo(() => (
+    <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }, (_, i) => (
+        <div 
+          key={i} 
+          className={`${themeClasses.card} rounded-2xl h-[200px] border ${themeClasses.border} animate-pulse backdrop-blur-sm`}
+        >
+          <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 bg-gray-300 rounded-full" />
+              <div className="w-16 h-6 bg-gray-300 rounded" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-300 rounded" />
+              <div className="h-4 bg-gray-300 rounded w-3/4" />
+            </div>
+            <div className="h-8 bg-gray-300 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  ), [themeClasses])
 
   return (
-    <div className={`min-h-screen ${themeClasses.bg} transition-colors duration-500`}>
+    <div className={`min-h-screen ${themeClasses.bg} transition-colors duration-300`}>
       <div ref={containerRef} className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         
-        {/* Simple Header */}
+        {/* Enhanced Header with Stream Access */}
         <div ref={heroRef}>
           <div className={`${themeClasses.surface} ${themeClasses.border} border rounded-2xl backdrop-blur-sm p-4 sm:p-6`}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -180,78 +257,74 @@ export default function Dashboard() {
                     Cricket Matches
                   </h1>
                   <p className={`text-sm ${themeClasses.textMuted} mt-1`}>
-                    Live streaming and updates
+                    Live streaming and updates • Welcome, {profile?.name}
                   </p>
                 </div>
               </div>
               
-              <button 
-                onClick={forceReload}
-                disabled={loading}
-                className={`${themeClasses.button} text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2 text-sm font-medium`}
-              >
-                <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                {loading ? 'Loading...' : 'Refresh'}
-              </button>
+              <div className="flex items-center gap-3">
+                {/* Stream Access Button */}
+                <button 
+                  onClick={handleStreamAccess}
+                  className={`${themeClasses.streamButton} text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 flex items-center gap-2 text-sm font-medium shadow-lg`}
+                >
+                  <TvIcon className="h-4 w-4" />
+                  Live Stream
+                </button>
+                
+                {/* Refresh Button */}
+                <button 
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className={`${themeClasses.button} text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2 text-sm font-medium`}
+                >
+                  <ArrowPathIcon className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                  {refreshing ? 'Refreshing...' : 'Refresh'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Simple Stats Grid */}
+        {/* Optimized Stats Grid */}
         <div ref={statsRef} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center`}>
+          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center transition-all duration-200 hover:scale-105`}>
             <div className="flex items-center justify-center mb-2">
               <ChartBarIcon className="h-8 w-8 text-blue-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-bold text-blue-600">{matches.length}</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{matchStats.total}</div>
             <div className={`text-xs ${themeClasses.textMuted} font-medium`}>Total</div>
           </div>
           
-          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center`}>
+          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center transition-all duration-200 hover:scale-105`}>
             <div className="flex items-center justify-center mb-2">
               <ClockIcon className="h-8 w-8 text-green-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-bold text-green-600">{upcomingMatches}</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{matchStats.upcoming}</div>
             <div className={`text-xs ${themeClasses.textMuted} font-medium`}>Upcoming</div>
           </div>
           
-          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center`}>
+          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center transition-all duration-200 hover:scale-105`}>
             <div className="flex items-center justify-center mb-2">
               <TvIcon className="h-8 w-8 text-red-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-bold text-red-600">{liveMatches}</div>
+            <div className="text-xl sm:text-2xl font-bold text-red-600">{matchStats.live}</div>
             <div className={`text-xs ${themeClasses.textMuted} font-medium`}>Live</div>
           </div>
           
-          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center`}>
+          <div className={`${themeClasses.card} ${themeClasses.border} border rounded-xl backdrop-blur-sm p-4 text-center transition-all duration-200 hover:scale-105`}>
             <div className="flex items-center justify-center mb-2">
               <FireIcon className="h-8 w-8 text-purple-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-bold text-purple-600">{todayMatches}</div>
+            <div className="text-xl sm:text-2xl font-bold text-purple-600">{matchStats.today}</div>
             <div className={`text-xs ${themeClasses.textMuted} font-medium`}>Today</div>
           </div>
         </div>
 
         {/* Content Section */}
         {loading ? (
-          <div ref={gridRef} className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div 
-                key={i} 
-                className={`${themeClasses.card} rounded-2xl h-[280px] border ${themeClasses.border} animate-pulse backdrop-blur-sm`}
-              >
-                <div className="p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 bg-gray-300 rounded-full" />
-                    <div className="w-12 h-12 bg-gray-300 rounded-full" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-4 bg-gray-300 rounded" />
-                    <div className="h-4 bg-gray-300 rounded w-3/4" />
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div ref={gridRef}>
+            {SkeletonLoader}
           </div>
         ) : matches.length === 0 ? (
           <div ref={gridRef} className="text-center py-12">
@@ -267,7 +340,7 @@ export default function Dashboard() {
               </p>
               <button 
                 className={`${themeClasses.button} text-white px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105 font-medium`}
-                onClick={forceReload}
+                onClick={handleRefresh}
               >
                 Refresh Data
               </button>
@@ -275,7 +348,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div ref={gridRef} className="space-y-6">
-            {/* Simple Section Header */}
+            {/* Section Header */}
             <div className="flex items-center justify-between">
               <h2 className={`text-xl sm:text-2xl font-bold ${themeClasses.text}`}>
                 Available Matches
@@ -287,10 +360,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Simple Matches Grid */}
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {/* Optimized Matches Grid */}
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
               {matches.map((match, index) => (
-                <div key={match.id} className="transition-all duration-200 hover:scale-[1.02]">
+                <div key={match.id} className="w-full">
                   <MatchCard
                     match={match}
                     device={userDevice}
