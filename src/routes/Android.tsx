@@ -16,28 +16,16 @@ const Android: React.FC = () => {
     const manifestUri = "https://sundirectgo-live.pc.cdn.bitgravity.com/hd38/dth.mpd";
 
     const initPlayer = async () => {
-      // Check if Shaka is loaded
-      if (!window.shaka) {
-        console.error('Shaka Player not loaded');
-        return;
-      }
+      if (!window.shaka || !videoRef.current || !containerRef.current) return;
 
-      // Install polyfills
       window.shaka.polyfill.installAll();
-
-      // Check browser support
+      
       if (!window.shaka.Player.isBrowserSupported()) {
         console.error('Browser not supported!');
         return;
       }
 
-      if (!videoRef.current || !containerRef.current) {
-        console.error('Video element not found');
-        return;
-      }
-
       try {
-        // Initialize Shaka UI
         const ui = new window.shaka.ui.Overlay(
           videoRef.current,
           containerRef.current,
@@ -47,15 +35,13 @@ const Android: React.FC = () => {
         const controls = ui.getControls();
         const player = controls.getPlayer();
 
-        // Store references globally
         window.player = player;
         window.ui = ui;
 
-        // Configure UI
         const uiConfig = {
           controlPanelElements: [
             'play_pause',
-            'mute',
+            'mute', 
             'volume',
             'quality',
             'fullscreen',
@@ -66,10 +52,9 @@ const Android: React.FC = () => {
         };
         ui.configure(uiConfig);
 
-        // Configure player
         player.configure({
           drm: {
-            clearKeys: {
+            "clearKeys": {
               "5e833f4019554aa394ff6de2eb19bf78": "f60e08a145804890492f315b61789ac5"
             }
           },
@@ -78,7 +63,6 @@ const Android: React.FC = () => {
           }
         });
 
-        // Add error listeners
         player.addEventListener('error', (errorEvent: any) => {
           console.error('Player Error:', errorEvent.detail);
         });
@@ -87,11 +71,9 @@ const Android: React.FC = () => {
           console.error('UI Error:', errorEvent.detail);
         });
 
-        // Load the manifest
         await player.load(manifestUri);
         console.log('Stream loaded successfully');
 
-        // Select 576p by default
         const tracks = player.getVariantTracks();
         const track576 = tracks.find((t: any) => t.height === 576);
         if (track576) {
@@ -104,21 +86,10 @@ const Android: React.FC = () => {
       }
     };
 
-    // Wait for Shaka to be available
-    const checkShaka = () => {
-      if (window.shaka) {
-        initPlayer();
-      } else {
-        // Wait a bit more and try again
-        setTimeout(checkShaka, 100);
-      }
-    };
-
-    // Start checking for Shaka
-    checkShaka();
-
-    // Cleanup function
+    const timer = setTimeout(initPlayer, 1000);
+    
     return () => {
+      clearTimeout(timer);
       if (window.player) {
         try {
           window.player.destroy();
@@ -152,13 +123,11 @@ const Android: React.FC = () => {
         ref={containerRef}
         data-shaka-player-container
         style={{
-          maxWidth: '100%',
+          width: '100%',
           height: '100vh',
-          margin: '0 auto',
           position: 'relative'
         }}
       >
-        {/* Logo */}
         <img 
           src="https://radarxtv.site/" 
           alt="" 
@@ -172,7 +141,6 @@ const Android: React.FC = () => {
           }}
         />
         
-        {/* Video Element */}
         <video 
           ref={videoRef}
           data-shaka-player
