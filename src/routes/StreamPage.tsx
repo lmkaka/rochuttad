@@ -23,10 +23,10 @@ export default function StreamPage() {
   // **DEVICE-BASED IFRAME URLs**
   const getStreamUrl = () => {
     if (userDevice === 'iOS') {
-      return 'https://www.watchwithradar.live/Ios'
+      return 'https://radarofc.onrender.com/ios'
     } else {
       // Android or Desktop
-      return 'https://www.watchwithradar.live/Android'
+      return 'https://radarofc.onrender.com/android'
     }
   }
 
