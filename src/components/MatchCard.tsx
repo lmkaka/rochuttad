@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { formatMatchTime } from '../utils/format'
 import { pickLink } from '../utils/linkPicker'
 import gsap from 'gsap'
@@ -21,6 +22,7 @@ type Props = {
 
 export default function MatchCard({ match, device, language, index }: Props) {
   const cardRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
   const [isDarkMode, setIsDarkMode] = useState(globalTheme.isDarkMode)
 
   useEffect(() => {
@@ -74,21 +76,27 @@ export default function MatchCard({ match, device, language, index }: Props) {
     }
   }, [index])
 
-  // Direct external link navigation - user preference based
+  // **CONTROLLED ACCESS: Watch Live button with dashboard referrer check**
   const handleWatchClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     
-    if (link) {
-      // Direct navigation to database assigned link
-      window.open(link, '_blank', 'noopener,noreferrer')
+    if (isLive && link) {
+      // Set dashboard referrer for stream access verification
+      sessionStorage.setItem('streamAccessAllowed', 'true')
+      sessionStorage.setItem('streamAccessTime', Date.now().toString())
+      sessionStorage.setItem('dashboardReferrer', window.location.href)
+      sessionStorage.setItem('selectedMatchId', match.id.toString())
+      sessionStorage.setItem('streamLink', link)
+      
+      // Navigate to internal stream page
+      navigate('/stream')
     }
   }
 
-  // Handle card click - same external link
+  // **REMOVED: Card click handler - No direct card access**
   const handleCardClick = () => {
-    if (link) {
-      window.open(link, '_blank', 'noopener,noreferrer')
-    }
+    // **DISABLED: No card click access for security**
+    // Only Watch Live button should grant access
   }
 
   const getTimeUntilMatch = () => {
@@ -129,7 +137,7 @@ export default function MatchCard({ match, device, language, index }: Props) {
     }
   }
 
-  // Updated action button - direct external navigation
+  // **SECURE ACCESS: Only Watch Live button grants stream access**
   const getActionButton = () => {
     if (isLive && link) {
       return (
@@ -145,7 +153,8 @@ export default function MatchCard({ match, device, language, index }: Props) {
     } else if (isUpcoming) {
       return (
         <button 
-          className={`${themeClasses.upcomingButton} px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 w-full justify-center`}
+          className={`${themeClasses.upcomingButton} px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 w-full justify-center cursor-default`}
+          disabled
         >
           <CalendarIcon className="w-5 h-5" />
           {getTimeUntilMatch()}
@@ -164,7 +173,8 @@ export default function MatchCard({ match, device, language, index }: Props) {
     } else {
       return (
         <button 
-          className={`${themeClasses.disabledButton} px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 w-full justify-center`}
+          className={`${themeClasses.disabledButton} px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 w-full justify-center cursor-default`}
+          disabled
         >
           <ExclamationTriangleIcon className="w-5 h-5" />
           N/A
@@ -226,12 +236,11 @@ export default function MatchCard({ match, device, language, index }: Props) {
       ref={cardRef}
       className={`
         ${themeClasses.card}
-        rounded-xl border-2 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer
+        rounded-xl border-2 shadow-lg hover:shadow-xl transition-all duration-300
         w-full
       `}
-      onClick={handleCardClick}
+      // **REMOVED: onClick handler for security**
     >
-      {/* Rest of your mobile and desktop layout remains same */}
       {/* Mobile Layout */}
       <div className="block md:hidden p-4">
         {/* Header - Status & Time */}
@@ -318,7 +327,7 @@ export default function MatchCard({ match, device, language, index }: Props) {
           </div>
         </div>
 
-        {/* Action Button */}
+        {/* **SECURE ACCESS: Action Button** */}
         <div className="flex justify-center">
           {getActionButton()}
         </div>
@@ -437,7 +446,7 @@ export default function MatchCard({ match, device, language, index }: Props) {
             </div>
           </div>
 
-          {/* Action Button - Bottom */}
+          {/* **SECURE ACCESS: Action Button - Bottom** */}
           <div className="pt-4">
             {getActionButton()}
           </div>
