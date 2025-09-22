@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TvIcon, PlayIcon, BoltIcon, DevicePhoneMobileIcon, ComputerDesktopIcon } from '@heroicons/react/24/solid'
 import { ClockIcon, CheckIcon, SignalIcon, LockClosedIcon } from '@heroicons/react/24/outline'
@@ -67,18 +67,14 @@ export default function StreamPage() {
     }
   }, [])
 
-  // **SIMPLE STATIC THEME CLASSES - No transitions**
-  const themeClasses = useMemo(() => ({
-    bg: 'bg-transparent',
-    cardBg: isDarkMode 
-      ? 'bg-slate-800/90 border-slate-700/50 backdrop-blur-xl' 
-      : 'bg-white/90 border-gray-200/60 backdrop-blur-xl',
-    text: isDarkMode ? 'text-white' : 'text-gray-900',
-    textSecondary: isDarkMode ? 'text-slate-300' : 'text-gray-700',
-    textMuted: isDarkMode ? 'text-slate-400' : 'text-gray-500',
-    telegramButton: 'bg-blue-600 hover:bg-blue-700 text-white',
-    authButton: 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white',
-  }), [isDarkMode])
+  // **ULTRA SIMPLE: Plain colors only - No gradients, backdrop-blur, shadows**
+  const bg = isDarkMode ? 'bg-slate-900' : 'bg-gray-50'
+  const cardBg = isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'
+  const text = isDarkMode ? 'text-white' : 'text-gray-900'
+  const textSecondary = isDarkMode ? 'text-slate-300' : 'text-gray-700'
+  const textMuted = isDarkMode ? 'text-slate-400' : 'text-gray-500'
+  const telegramButton = 'bg-blue-600 hover:bg-blue-700 text-white'
+  const authButton = 'bg-blue-600 hover:bg-blue-700 text-white'
 
   const handleTelegramJoin = () => {
     window.open('https://t.me/RadarxCricket', '_blank')
@@ -112,47 +108,43 @@ export default function StreamPage() {
 
   const DeviceIcon = getDeviceIcon()
 
-  // **STATIC CHECKING ACCESS SCREEN - No animations**
+  // **SIMPLE CHECKING SCREEN**
   if (checkingAccess) {
     return (
-      <div className={`min-h-screen ${themeClasses.bg} relative`}>
-        <div className={`absolute inset-0 ${isDarkMode ? 'bg-slate-900/10' : 'bg-white/5'} pointer-events-none`} />
-        <div className="relative z-10 flex items-center justify-center min-h-screen">
+      <div className={`min-h-screen ${bg}`}>
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" 
-                 style={{ animation: 'spin 1s linear infinite' }}></div>
-            <p className={`${themeClasses.text} text-base`}>Verifying access...</p>
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4 animate-spin"></div>
+            <p className={`${text} text-base`}>Verifying access...</p>
           </div>
         </div>
       </div>
     )
   }
 
-  // **STATIC ACCESS DENIED SCREEN - No animations**
+  // **SIMPLE ACCESS DENIED SCREEN**
   if (accessDenied) {
     return (
-      <div className={`min-h-screen ${themeClasses.bg} relative`}>
-        <div className={`absolute inset-0 ${isDarkMode ? 'bg-slate-900/10' : 'bg-white/5'} pointer-events-none`} />
-        
-        <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
-          <div className={`${themeClasses.cardBg} rounded-2xl border shadow-2xl p-8 max-w-md w-full text-center`}>
-            <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <LockClosedIcon className="w-10 h-10 text-red-500" />
+      <div className={`min-h-screen ${bg}`}>
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <div className={`${cardBg} rounded-xl border p-8 max-w-md w-full text-center`}>
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <LockClosedIcon className="w-8 h-8 text-red-500" />
             </div>
             
-            <h2 className={`text-2xl font-bold ${themeClasses.text} mb-4`}>
-              Stream Access Restricted
+            <h2 className={`text-2xl font-bold ${text} mb-4`}>
+              Access Restricted
             </h2>
             
-            <p className={`${themeClasses.textMuted} text-base mb-6 leading-relaxed`}>
-              Please {session ? 'navigate through dashboard' : 'sign up or login'} to view live streams
+            <p className={`${textMuted} text-base mb-6`}>
+              Please {session ? 'navigate through dashboard' : 'sign up or login'} to view streams
             </p>
             
             <div className="space-y-3">
               {session ? (
                 <button
                   onClick={handleGoToDashboard}
-                  className={`${themeClasses.authButton} w-full px-6 py-3 rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2`}
+                  className={`${authButton} w-full px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2`}
                 >
                   <TvIcon className="w-5 h-5" />
                   Go to Dashboard
@@ -160,7 +152,7 @@ export default function StreamPage() {
               ) : (
                 <button
                   onClick={handleGoToAuth}
-                  className={`${themeClasses.authButton} w-full px-6 py-3 rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2`}
+                  className={`${authButton} w-full px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2`}
                 >
                   <LockClosedIcon className="w-5 h-5" />
                   Sign Up / Login
@@ -168,8 +160,8 @@ export default function StreamPage() {
               )}
             </div>
             
-            <p className={`${themeClasses.textMuted} text-sm mt-6`}>
-              Access is only granted through proper navigation
+            <p className={`${textMuted} text-sm mt-6`}>
+              Access through proper navigation only
             </p>
           </div>
         </div>
@@ -177,52 +169,49 @@ export default function StreamPage() {
     )
   }
 
-  // **STATIC MAIN STREAM PAGE - No animations**
+  // **ULTRA SIMPLE MAIN PAGE**
   return (
-    <div className={`min-h-screen ${themeClasses.bg} relative`}>
-      <div className={`absolute inset-0 ${isDarkMode ? 'bg-slate-900/10' : 'bg-white/5'} pointer-events-none`} />
-      
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 py-6">
+    <div className={`min-h-screen ${bg}`}>
+      <div className="w-full max-w-4xl mx-auto px-4 py-6">
         
-        {/* Static header */}
+        {/* Simple header */}
         <div className="mb-6">
-          <div className={`${themeClasses.cardBg} rounded-2xl border shadow-lg p-6`}>
+          <div className={`${cardBg} rounded-xl border p-6`}>
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl mb-4 shadow-md">
-                <TvIcon className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-600 rounded-xl mb-4">
+                <TvIcon className="w-6 h-6 text-white" />
               </div>
-              <h1 className={`text-2xl sm:text-3xl font-bold ${themeClasses.text} mb-2`}>
+              <h1 className={`text-2xl font-bold ${text} mb-2`}>
                 Live Cricket Stream
               </h1>
-              <p className={`${themeClasses.textMuted} text-base mb-3`}>
-                Watch your favorite matches live
+              <p className={`${textMuted} text-base mb-3`}>
+                Watch matches live
               </p>
               
               <div className="flex items-center justify-center gap-2">
                 <DeviceIcon className="w-4 h-4 text-blue-600" />
-                <span className={`${themeClasses.textSecondary} text-sm`}>
-                  Optimized for {userDevice}
+                <span className={`${textSecondary} text-sm`}>
+                  {userDevice} optimized
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Static stream container */}
+        {/* Simple stream container */}
         <div className="mb-6">
-          <div className={`${themeClasses.cardBg} rounded-2xl border shadow-lg overflow-hidden`}>
+          <div className={`${cardBg} rounded-xl border overflow-hidden`}>
             
             <div className="p-4 border-b border-current border-opacity-10">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <PlayIcon className="w-6 h-6 text-blue-600" />
-                  <h2 className={`text-xl font-bold ${themeClasses.text}`}>
+                  <PlayIcon className="w-5 h-5 text-blue-600" />
+                  <h2 className={`text-lg font-bold ${text}`}>
                     Live Stream
                   </h2>
                 </div>
                 
-                <div className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-sm">
-                  {/* **STATIC: No pulse animation** */}
+                <div className="flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-lg">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                   <BoltIcon className="w-4 h-4" />
                   <span className="text-sm font-semibold">LIVE</span>
@@ -230,16 +219,16 @@ export default function StreamPage() {
               </div>
             </div>
 
-            {/* **OPTIMIZED: Static iframe container** */}
+            {/* **SIMPLE: Basic iframe container** */}
             <div className="relative bg-black">
               {!streamError ? (
                 <iframe
                   src={streamUrl}
                   className="w-full aspect-video border-0"
                   style={{ 
-                    minHeight: '400px', 
-                    height: '70vh', 
-                    maxHeight: '600px'
+                    minHeight: '350px', 
+                    height: '60vh', 
+                    maxHeight: '500px'
                   }}
                   allowFullScreen
                   allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -247,77 +236,72 @@ export default function StreamPage() {
                   loading="eager"
                   onLoad={handleStreamLoad}
                   onError={handleStreamError}
-                  title={`Cricket Live Stream - ${userDevice}`}
+                  title={`Cricket Stream - ${userDevice}`}
                   referrerPolicy="no-referrer-when-downgrade"
                 />
               ) : (
-                <div className="flex items-center justify-center h-96">
+                <div className="flex items-center justify-center h-80">
                   <div className="text-center">
-                    <SignalIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                    <h3 className={`text-xl font-bold ${themeClasses.text} mb-2`}>
+                    <SignalIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                    <h3 className={`text-lg font-bold ${text} mb-2`}>
                       Stream Unavailable
                     </h3>
-                    <p className={`${themeClasses.textMuted} text-base mb-4`}>
+                    <p className={`${textMuted} text-base mb-4`}>
                       Please try again later
                     </p>
                     <button 
                       onClick={() => window.location.reload()}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
-                      Reload Stream
+                      Reload
                     </button>
                   </div>
                 </div>
               )}
               
-              {/* **STATIC: Simple loading overlay - No animations** */}
+              {/* **SIMPLE: Basic loading** */}
               {!streamLoaded && !streamError && (
-                <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                   <div className="text-center">
-                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-3"
-                         style={{ animation: 'spin 1s linear infinite' }}></div>
-                    <p className="text-white text-base">Loading Stream...</p>
+                    <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full mb-3 animate-spin"></div>
+                    <p className="text-white text-sm">Loading...</p>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Static stream info */}
+            {/* Simple stream info */}
             <div className="p-4">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <CheckIcon className="w-5 h-5 text-green-500" />
-                  <span className={`${themeClasses.textMuted} text-sm`}>
-                    HD Quality
-                  </span>
+                  <CheckIcon className="w-4 h-4 text-green-500" />
+                  <span className={`${textMuted} text-sm`}>HD Quality</span>
+                </div>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <ClockIcon className="w-5 h-5 text-blue-500" />
-                  <span className={`${themeClasses.textMuted} text-sm`}>
-                    Live Coverage
-                  </span>
-                </div>
+                  <ClockIcon className="w-4 h-4 text-blue-500" />
+                  <span className={`${textMuted} text-sm`}>Live Coverage</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Static Telegram Button */}
+        {/* Simple Telegram Button */}
         <div className="text-center">
-          <div className={`${themeClasses.cardBg} rounded-2xl border shadow-lg p-6`}>
-            <h3 className={`text-lg font-bold ${themeClasses.text} mb-3`}>
+          <div className={`${cardBg} rounded-xl border p-6`}>
+            <h3 className={`text-lg font-bold ${text} mb-3`}>
               Stay Updated
             </h3>
-            <p className={`${themeClasses.textMuted} text-base mb-6`}>
-              Join our community for live updates and highlights
+            <p className={`${textMuted} text-base mb-6`}>
+              Join our community for updates
             </p>
             
             <button
               onClick={handleTelegramJoin}
-              className={`${themeClasses.telegramButton} px-8 py-3 rounded-lg font-semibold shadow-lg flex items-center justify-center gap-3 mx-auto`}
+              className={`${telegramButton} px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 mx-auto`}
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.569 2.846-1.527 9.99-2.166 13.15-.27 1.33-1.018 1.58-1.681 1.58-.632 0-1.071-.264-1.404-.623-.842-.888-2.442-2.142-3.33-2.777-1.218-.871-2.135-1.315-3.403-2.174-1.314-.89-1.639-1.31-.755-2.326 1.904-2.18 3.81-4.36 5.714-6.54.19-.218.363-.218.363 0 .05.116-.212.263-.212.379L9.2 12.15s-.225.188-.412.075c-1.45-.875-2.9-1.75-4.35-2.625-.45-.275-.45-.563 0-.838l13.8-5.625c.45-.188.9.075.675.825z"/>
               </svg>
               Join @RadarxCricket
