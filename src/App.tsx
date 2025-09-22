@@ -1,5 +1,4 @@
 import { Route, Routes, Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
 import AuthPage from './routes/AuthPage'
 import AuthCallback from './routes/AuthCallback'
 import Onboarding from './routes/Onboarding'
@@ -79,10 +78,10 @@ export default function App() {
           element={session ? (profile ? <AdminPanel /> : <Navigate to="/onboarding" />) : <Navigate to="/auth" />} 
         />
         
-        {/* **SIMPLIFIED: Direct Stream Route - No restrictions** */}
+        {/* **COMPLETELY PUBLIC: Stream Route - No authentication needed** */}
         <Route 
           path="/stream" 
-          element={session ? (profile ? <StreamPage /> : <Navigate to="/onboarding" />) : <Navigate to="/auth" />} 
+          element={<StreamPage />} 
         />
         
         {/* Default Route */}
