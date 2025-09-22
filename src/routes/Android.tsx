@@ -25,7 +25,7 @@ const Android: React.FC = () => {
       />
       
       <iframe
-        src="https://radarofc.onrender.com/both.html"
+        src="https://radarofc.onrender.com/android.html"
         style={{
           width: '100%',
           height: '100%',
