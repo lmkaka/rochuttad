@@ -4,8 +4,6 @@ import { TvIcon, PlayIcon, BoltIcon, DevicePhoneMobileIcon, ComputerDesktopIcon 
 import { ClockIcon, CheckIcon, SignalIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 import { globalTheme } from './AuthPage'
 import { useAuth } from '../context/AuthProvider'
-import gsap from 'gsap'
-import { useGSAP } from '@gsap/react'
 
 export default function StreamPage() {
   const { profile, session } = useAuth()
@@ -15,7 +13,6 @@ export default function StreamPage() {
   const [streamError, setStreamError] = useState(false)
   const [accessDenied, setAccessDenied] = useState(false)
   const [checkingAccess, setCheckingAccess] = useState(true)
-  const containerRef = useRef<HTMLDivElement>(null)
 
   // Get user device preference
   const userDevice = profile?.device_preference || 'Android'
@@ -70,7 +67,7 @@ export default function StreamPage() {
     }
   }, [])
 
-  // **THEME CLASSES**
+  // **SIMPLE STATIC THEME CLASSES - No transitions**
   const themeClasses = useMemo(() => ({
     bg: 'bg-transparent',
     cardBg: isDarkMode 
@@ -82,27 +79,6 @@ export default function StreamPage() {
     telegramButton: 'bg-blue-600 hover:bg-blue-700 text-white',
     authButton: 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white',
   }), [isDarkMode])
-
-  // **ANIMATIONS**
-  useGSAP(() => {
-    if (!containerRef.current) return
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReducedMotion) return
-
-    gsap.fromTo(containerRef.current, 
-      { opacity: 0, y: 20 }, 
-      { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }
-    )
-
-    gsap.to('.live-pulse', {
-      scale: 1.1,
-      duration: 1,
-      ease: 'power2.inOut',
-      repeat: -1,
-      yoyo: true
-    })
-  }, [])
 
   const handleTelegramJoin = () => {
     window.open('https://t.me/RadarxCricket', '_blank')
@@ -136,14 +112,15 @@ export default function StreamPage() {
 
   const DeviceIcon = getDeviceIcon()
 
-  // **CHECKING ACCESS SCREEN**
+  // **STATIC CHECKING ACCESS SCREEN - No animations**
   if (checkingAccess) {
     return (
-      <div className={`min-h-screen ${themeClasses.bg} transition-all duration-300 relative`}>
+      <div className={`min-h-screen ${themeClasses.bg} relative`}>
         <div className={`absolute inset-0 ${isDarkMode ? 'bg-slate-900/10' : 'bg-white/5'} pointer-events-none`} />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" 
+                 style={{ animation: 'spin 1s linear infinite' }}></div>
             <p className={`${themeClasses.text} text-base`}>Verifying access...</p>
           </div>
         </div>
@@ -151,10 +128,10 @@ export default function StreamPage() {
     )
   }
 
-  // **ACCESS DENIED SCREEN**
+  // **STATIC ACCESS DENIED SCREEN - No animations**
   if (accessDenied) {
     return (
-      <div className={`min-h-screen ${themeClasses.bg} transition-all duration-300 relative`}>
+      <div className={`min-h-screen ${themeClasses.bg} relative`}>
         <div className={`absolute inset-0 ${isDarkMode ? 'bg-slate-900/10' : 'bg-white/5'} pointer-events-none`} />
         
         <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
@@ -175,7 +152,7 @@ export default function StreamPage() {
               {session ? (
                 <button
                   onClick={handleGoToDashboard}
-                  className={`${themeClasses.authButton} w-full px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2`}
+                  className={`${themeClasses.authButton} w-full px-6 py-3 rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2`}
                 >
                   <TvIcon className="w-5 h-5" />
                   Go to Dashboard
@@ -183,7 +160,7 @@ export default function StreamPage() {
               ) : (
                 <button
                   onClick={handleGoToAuth}
-                  className={`${themeClasses.authButton} w-full px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2`}
+                  className={`${themeClasses.authButton} w-full px-6 py-3 rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2`}
                 >
                   <LockClosedIcon className="w-5 h-5" />
                   Sign Up / Login
@@ -200,14 +177,14 @@ export default function StreamPage() {
     )
   }
 
-  // **MAIN STREAM PAGE**
+  // **STATIC MAIN STREAM PAGE - No animations**
   return (
-    <div className={`min-h-screen ${themeClasses.bg} transition-all duration-300 relative`}>
+    <div className={`min-h-screen ${themeClasses.bg} relative`}>
       <div className={`absolute inset-0 ${isDarkMode ? 'bg-slate-900/10' : 'bg-white/5'} pointer-events-none`} />
       
-      <div ref={containerRef} className="relative z-10 w-full max-w-6xl mx-auto px-4 py-6">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 py-6">
         
-        {/* Simple header */}
+        {/* Static header */}
         <div className="mb-6">
           <div className={`${themeClasses.cardBg} rounded-2xl border shadow-lg p-6`}>
             <div className="text-center">
@@ -231,7 +208,7 @@ export default function StreamPage() {
           </div>
         </div>
 
-        {/* Stream container */}
+        {/* Static stream container */}
         <div className="mb-6">
           <div className={`${themeClasses.cardBg} rounded-2xl border shadow-lg overflow-hidden`}>
             
@@ -245,13 +222,15 @@ export default function StreamPage() {
                 </div>
                 
                 <div className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-sm">
-                  <div className="live-pulse w-2 h-2 bg-white rounded-full"></div>
+                  {/* **STATIC: No pulse animation** */}
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
                   <BoltIcon className="w-4 h-4" />
                   <span className="text-sm font-semibold">LIVE</span>
                 </div>
               </div>
             </div>
 
+            {/* **OPTIMIZED: Static iframe container** */}
             <div className="relative bg-black">
               {!streamError ? (
                 <iframe
@@ -283,7 +262,7 @@ export default function StreamPage() {
                     </p>
                     <button 
                       onClick={() => window.location.reload()}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
                       Reload Stream
                     </button>
@@ -291,16 +270,19 @@ export default function StreamPage() {
                 </div>
               )}
               
+              {/* **STATIC: Simple loading overlay - No animations** */}
               {!streamLoaded && !streamError && (
                 <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
                   <div className="text-center">
-                    <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-3"></div>
+                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-3"
+                         style={{ animation: 'spin 1s linear infinite' }}></div>
                     <p className="text-white text-base">Loading Stream...</p>
                   </div>
                 </div>
               )}
             </div>
 
+            {/* Static stream info */}
             <div className="p-4">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
@@ -321,7 +303,7 @@ export default function StreamPage() {
           </div>
         </div>
 
-        {/* Telegram Button */}
+        {/* Static Telegram Button */}
         <div className="text-center">
           <div className={`${themeClasses.cardBg} rounded-2xl border shadow-lg p-6`}>
             <h3 className={`text-lg font-bold ${themeClasses.text} mb-3`}>
@@ -333,7 +315,7 @@ export default function StreamPage() {
             
             <button
               onClick={handleTelegramJoin}
-              className={`${themeClasses.telegramButton} px-8 py-3 rounded-lg font-semibold transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-3 mx-auto`}
+              className={`${themeClasses.telegramButton} px-8 py-3 rounded-lg font-semibold shadow-lg flex items-center justify-center gap-3 mx-auto`}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.569 2.846-1.527 9.99-2.166 13.15-.27 1.33-1.018 1.58-1.681 1.58-.632 0-1.071-.264-1.404-.623-.842-.888-2.442-2.142-3.33-2.777-1.218-.871-2.135-1.315-3.403-2.174-1.314-.89-1.639-1.31-.755-2.326 1.904-2.18 3.81-4.36 5.714-6.54.19-.218.363-.218.363 0 .05.116-.212.263-.212.379L9.2 12.15s-.225.188-.412.075c-1.45-.875-2.9-1.75-4.35-2.625-.45-.275-.45-.563 0-.838l13.8-5.625c.45-.188.9.075.675.825z"/>
