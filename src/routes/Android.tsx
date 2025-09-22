@@ -25,7 +25,7 @@ const Android: React.FC = () => {
       />
       
       <iframe
-        src="https://insiderlive3.netlify.app/play/?id=132379&cdn=adfree_stream"
+        src="https://radarofc.onrender.com/android.html"
         style={{
           width: '100%',
           height: '100%',
