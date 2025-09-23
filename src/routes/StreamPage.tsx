@@ -48,7 +48,7 @@ export default function StreamPage() {
   // **DEVICE-BASED IFRAME URLs**
   const getStreamUrl = () => {
     if (userDevice === 'iOS') {
-      return 'https://radarofc.onrender.com/new.html'
+      return 'https://radarofc.onrender.com/ios.html'
     } else {
       return 'https://radarofc.onrender.com/android.html'
     }
