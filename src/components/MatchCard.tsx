@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { formatMatchTime } from '../utils/format'
 import { pickLink } from '../utils/linkPicker'
+import { supabase } from '../utils/supabaseClient' 
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { 
@@ -77,32 +78,42 @@ export default function MatchCard({ match, device, language, index }: Props) {
   }, [index])
 
   // **CONTROLLED ACCESS: Watch Live button with dashboard referrer check**
- const handleWatchClick = (e: React.MouseEvent) => {
+ const handleWatchClick = async (e: React.MouseEvent) => {
   e.stopPropagation()
 
-  if (isLive && link) {
-    sessionStorage.setItem('streamAccessAllowed', 'true')
-    sessionStorage.setItem('streamAccessTime', Date.now().toString())
-    sessionStorage.setItem('dashboardReferrer', window.location.href)
-    sessionStorage.setItem('selectedMatchId', match.id.toString())
-    sessionStorage.setItem('streamLink', link)
-    sessionStorage.setItem('streamAus', match.streamaus_url || '')
-    sessionStorage.setItem('streamRoi', match.streamroi_url || '')
-    sessionStorage.setItem('streamWi', match.streamwi_url || '')
+  if (isLive) {
+    try {
+      const { data, error } = await supabase
+        .from('matches')
+        .select('androidlinkhindi, androidlinkenglish, ioslinkhindi, ioslinkenglish, desktoplinkhindi, desktoplinkenglish')
+        .eq('id', match.id)
+        .single()
 
-    // Navigate to correct streaming page based on available link priority
-    if (match.streamaus_url) {
-      navigate('/streamaus')
-    } else if (match.streamroi_url) {
-      navigate('/streamroi')
-    } else if (match.streamwi_url) {
-      navigate('/streamwi')
-    } else {
-      navigate('/stream') // fallback route
+      if (error || !data) {
+        alert('Stream link not found')
+        return
+      }
+
+      let streamingUrl = ''
+
+      if (device === 'Android' && language === 'Hindi') streamingUrl = data.androidlinkhindi
+      else if (device === 'Android' && language === 'English') streamingUrl = data.androidlinkenglish
+      else if (device === 'iOS' && language === 'Hindi') streamingUrl = data.ioslinkhindi
+      else if (device === 'iOS' && language === 'English') streamingUrl = data.ioslinkenglish
+      else if (device === 'Desktop' && language === 'Hindi') streamingUrl = data.desktoplinkhindi
+      else if (device === 'Desktop' && language === 'English') streamingUrl = data.desktoplinkenglish
+
+      if (streamingUrl) {
+        window.location.href = streamingUrl
+      } else {
+        alert('No streaming URL found for your device/language')
+      }
+    } catch (error) {
+      console.error(error)
+      alert('Failed to fetch streaming link')
     }
   }
 }
-
 
   // **REMOVED: Card click handler - No direct card access**
   const handleCardClick = () => {
