@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { formatMatchTime } from '../utils/format'
 import { pickLink } from '../utils/linkPicker'
-import { supabase } from '../utils/supabaseClient' 
+import { supabase } from '../utils/supabaseClient'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { 
