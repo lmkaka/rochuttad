@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TvIcon, PlayIcon, BoltIcon, DevicePhoneMobileIcon, ComputerDesktopIcon } from '@heroicons/react/24/solid'
-import { ClockIcon, CheckIcon, SignalIcon, LockClosedIcon } from '@heroicons/react/24/outline'
+import { ClockIcon, CheckIcon, SignalIcon } from '@heroicons/react/24/outline'
 import { globalTheme } from './AuthPage'
 import { useAuth } from '../context/AuthProvider'
 
@@ -12,8 +12,12 @@ export default function StreamPage() {
   const [streamLoaded, setStreamLoaded] = useState(false)
   const [streamError, setStreamError] = useState(false)
 
-  // Get user device preference
   const userDevice = profile?.device_preference || 'Android'
+
+  // Define telegramButton style to fix undefined error
+  const telegramButton = 'bg-blue-600 hover:bg-blue-700 text-white'
+
+  const [streamUrl, setStreamUrl] = useState('')
 
   useEffect(() => {
     const handleThemeChange = (event: CustomEvent) => {
@@ -26,16 +30,10 @@ export default function StreamPage() {
     }
   }, [])
 
-  // **DEVICE-BASED IFRAME URLs**
-  const getStreamUrl = () => {
-    if (userDevice === 'iOS') {
-      return 'https://radarofc.onrender.com/g.html'
-    } else {
-      return 'https://radarofc.onrender.com/android.html'
-    }
-  }
-
-  const streamUrl = getStreamUrl()
+  useEffect(() => {
+    const link = sessionStorage.getItem('streamLink') || ''
+    setStreamUrl(link)
+  }, [])
 
   const handleTelegramJoin = () => {
     window.open('https://t.me/RadarxCricket', '_blank')
@@ -59,7 +57,6 @@ export default function StreamPage() {
     navigate('/dashboard')
   }
 
-  // Get device icon
   const getDeviceIcon = () => {
     if (userDevice === 'iOS' || userDevice === 'Android') {
       return DevicePhoneMobileIcon
@@ -69,124 +66,114 @@ export default function StreamPage() {
 
   const DeviceIcon = getDeviceIcon()
 
-  // **ULTRA SIMPLE MAIN PAGE**
+  if (!streamUrl) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'}`}>
+        <p className={`text-center text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          Stream not available. Please go back and select a match.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'}`}>
       <div className="w-full max-w-4xl mx-auto px-4 py-6">
         
-        {/* Simple header */}
-        <div className="mb-6">
-          <div className={`${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border p-6`}>
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-600 rounded-xl mb-4">
-                <TvIcon className="w-6 h-6 text-white" />
-              </div>
-              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-                Live Cricket Stream
-              </h1>
-              <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-3`}>
-                Watch matches live
-              </p>
-              
-              <div className="flex items-center justify-center gap-2">
-                <DeviceIcon className="w-4 h-4 text-blue-600" />
-                <span className={`${isDarkMode ? 'text-slate-300' : 'text-gray-700'} text-sm`}>
-                  {userDevice} optimized
-                </span>
-              </div>
+        {/* Header */}
+        <div className={`mb-6 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border p-6`}>
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-600 rounded-xl mb-4">
+              <TvIcon className="w-6 h-6 text-white" />
+            </div>
+            <h1 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              Live Cricket Stream
+            </h1>
+            <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-3`}>
+              Watch matches live
+            </p>
+            <div className="flex items-center justify-center gap-2">
+              <DeviceIcon className="w-4 h-4 text-blue-600" />
+              <span className={`${isDarkMode ? 'text-slate-300' : 'text-gray-700'} text-sm`}>
+                {userDevice} optimized
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Simple stream container */}
-        <div className="mb-6">
-          <div className={`${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border overflow-hidden`}>
-            
-            <div className="p-4 border-b border-current border-opacity-10">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <PlayIcon className="w-5 h-5 text-blue-600" />
-                  <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Live Stream
-                  </h2>
-                </div>
-                
-                <div className="flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-lg">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  <BoltIcon className="w-4 h-4" />
-                  <span className="text-sm font-semibold">LIVE</span>
+        {/* Stream Container */}
+        <div className={`${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border overflow-hidden mb-6`}>
+          <div className="p-4 border-b border-current border-opacity-10 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <PlayIcon className="w-5 h-5 text-blue-600" />
+              <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Live Stream
+              </h2>
+            </div>
+            <div className="flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-lg">
+              <div className="w-2 h-2 bg-white rounded-full"></div>
+              <BoltIcon className="w-4 h-4" />
+              <span className="text-sm font-semibold">LIVE</span>
+            </div>
+          </div>
+
+          <div className="relative bg-black">
+            {!streamError ? (
+              <iframe
+                src={streamUrl}
+                className="w-full aspect-video border-0"
+                style={{ minHeight: '350px', height: '60vh', maxHeight: '500px'}}
+                allowFullScreen
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation"
+                loading="eager"
+                onLoad={handleStreamLoad}
+                onError={handleStreamError}
+                title={`Cricket Stream - ${userDevice}`}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-80">
+                <div className="text-center">
+                  <SignalIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                  <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                    Stream Unavailable
+                  </h3>
+                  <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-4`}>
+                    Please try again later
+                  </p>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Reload
+                  </button>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* **SIMPLE: Basic iframe container** */}
-            <div className="relative bg-black">
-              {!streamError ? (
-                <iframe
-                  src={streamUrl}
-                  className="w-full aspect-video border-0"
-                  style={{ 
-                    minHeight: '350px', 
-                    height: '60vh', 
-                    maxHeight: '500px'
-                  }}
-                  allowFullScreen
-                  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation"
-                  loading="eager"
-                  onLoad={handleStreamLoad}
-                  onError={handleStreamError}
-                  title={`Cricket Stream - ${userDevice}`}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-80">
-                  <div className="text-center">
-                    <SignalIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                    <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-                      Stream Unavailable
-                    </h3>
-                    <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-4`}>
-                      Please try again later
-                    </p>
-                    <button 
-                      onClick={() => window.location.reload()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      Reload
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* **SIMPLE: Basic loading** */}
-              {!streamLoaded && !streamError && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full mb-3 animate-spin"></div>
-                    <p className="text-white text-sm">Loading...</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Simple stream info */}
-            <div className="p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <CheckIcon className="w-4 h-4 text-green-500" />
-                  <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-sm`}>HD Quality</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <ClockIcon className="w-4 h-4 text-blue-500" />
-                  <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-sm`}>Live Coverage</span>
+            {!streamLoaded && !streamError && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full mb-3 animate-spin"></div>
+                  <p className="text-white text-sm">Loading...</p>
                 </div>
               </div>
+            )}
+          </div>
+
+          <div className="p-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <CheckIcon className="w-4 h-4 text-green-500" />
+              <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-sm`}>HD Quality</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ClockIcon className="w-4 h-4 text-blue-500" />
+              <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-sm`}>Live Coverage</span>
             </div>
           </div>
         </div>
 
-        {/* Simple Telegram Button */}
+        {/* Telegram Join Button */}
         <div className="text-center">
           <div className={`${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border p-6`}>
             <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
@@ -195,7 +182,6 @@ export default function StreamPage() {
             <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-6`}>
               Join our community for updates
             </p>
-            
             <button
               onClick={handleTelegramJoin}
               className={`${telegramButton} px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 mx-auto`}
