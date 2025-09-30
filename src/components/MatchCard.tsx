@@ -77,21 +77,32 @@ export default function MatchCard({ match, device, language, index }: Props) {
   }, [index])
 
   // **CONTROLLED ACCESS: Watch Live button with dashboard referrer check**
-  const handleWatchClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    
-    if (isLive && link) {
-      // Set dashboard referrer for stream access verification
-      sessionStorage.setItem('streamAccessAllowed', 'true')
-      sessionStorage.setItem('streamAccessTime', Date.now().toString())
-      sessionStorage.setItem('dashboardReferrer', window.location.href)
-      sessionStorage.setItem('selectedMatchId', match.id.toString())
-      sessionStorage.setItem('streamLink', link)
-      
-      // Navigate to internal stream page
-      navigate('/stream')
+ const handleWatchClick = (e: React.MouseEvent) => {
+  e.stopPropagation()
+
+  if (isLive && link) {
+    sessionStorage.setItem('streamAccessAllowed', 'true')
+    sessionStorage.setItem('streamAccessTime', Date.now().toString())
+    sessionStorage.setItem('dashboardReferrer', window.location.href)
+    sessionStorage.setItem('selectedMatchId', match.id.toString())
+    sessionStorage.setItem('streamLink', link)
+    sessionStorage.setItem('streamAus', match.streamaus_url || '')
+    sessionStorage.setItem('streamRoi', match.streamroi_url || '')
+    sessionStorage.setItem('streamWi', match.streamwi_url || '')
+
+    // Navigate to correct streaming page based on available link priority
+    if (match.streamaus_url) {
+      navigate('/streamaus')
+    } else if (match.streamroi_url) {
+      navigate('/streamroi')
+    } else if (match.streamwi_url) {
+      navigate('/streamwi')
+    } else {
+      navigate('/stream') // fallback route
     }
   }
+}
+
 
   // **REMOVED: Card click handler - No direct card access**
   const handleCardClick = () => {
