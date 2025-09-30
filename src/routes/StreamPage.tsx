@@ -14,26 +14,26 @@ export default function StreamPage() {
 
   const userDevice = profile?.device_preference || 'Android'
 
-  // Define telegramButton style to fix undefined error
-  const telegramButton = 'bg-blue-600 hover:bg-blue-700 text-white'
-
-  const [streamUrl, setStreamUrl] = useState('')
-
+  // Theme change listener
   useEffect(() => {
     const handleThemeChange = (event: CustomEvent) => {
       setIsDarkMode(event.detail.isDarkMode)
     }
-    
     window.addEventListener('themeChange', handleThemeChange as EventListener)
     return () => {
       window.removeEventListener('themeChange', handleThemeChange as EventListener)
     }
   }, [])
 
-  useEffect(() => {
-    const link = sessionStorage.getItem('streamLink') || ''
-    setStreamUrl(link)
-  }, [])
+  // Device-based iframe URL
+  const getStreamUrl = () => {
+    if (userDevice === 'iOS') {
+      return 'https://radarofc.onrender.com/g.html'
+    } else {
+      return 'https://radarofc.onrender.com/android.html'
+    }
+  }
+  const streamUrl = getStreamUrl()
 
   const handleTelegramJoin = () => {
     window.open('https://t.me/RadarxCricket', '_blank')
@@ -66,27 +66,17 @@ export default function StreamPage() {
 
   const DeviceIcon = getDeviceIcon()
 
-  if (!streamUrl) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'}`}>
-        <p className={`text-center text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-          Stream not available. Please go back and select a match.
-        </p>
-      </div>
-    )
-  }
-
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'}`}>
       <div className="w-full max-w-4xl mx-auto px-4 py-6">
-        
+
         {/* Header */}
-        <div className={`mb-6 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border p-6`}>
+        <div className={`${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border p-6 mb-6`}>
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-600 rounded-xl mb-4">
               <TvIcon className="w-6 h-6 text-white" />
             </div>
-            <h1 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
               Live Cricket Stream
             </h1>
             <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-3`}>
@@ -122,7 +112,7 @@ export default function StreamPage() {
               <iframe
                 src={streamUrl}
                 className="w-full aspect-video border-0"
-                style={{ minHeight: '350px', height: '60vh', maxHeight: '500px'}}
+                style={{ minHeight: '350px', height: '60vh', maxHeight: '500px' }}
                 allowFullScreen
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation"
@@ -130,6 +120,7 @@ export default function StreamPage() {
                 onLoad={handleStreamLoad}
                 onError={handleStreamError}
                 title={`Cricket Stream - ${userDevice}`}
+                referrerPolicy="no-referrer-when-downgrade"
               />
             ) : (
               <div className="flex items-center justify-center h-80">
@@ -141,7 +132,7 @@ export default function StreamPage() {
                   <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-4`}>
                     Please try again later
                   </p>
-                  <button 
+                  <button
                     onClick={() => window.location.reload()}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                   >
@@ -166,6 +157,7 @@ export default function StreamPage() {
               <CheckIcon className="w-4 h-4 text-green-500" />
               <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-sm`}>HD Quality</span>
             </div>
+
             <div className="flex items-center gap-2">
               <ClockIcon className="w-4 h-4 text-blue-500" />
               <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-sm`}>Live Coverage</span>
@@ -173,7 +165,7 @@ export default function StreamPage() {
           </div>
         </div>
 
-        {/* Telegram Join Button */}
+        {/* Simple Telegram Button */}
         <div className="text-center">
           <div className={`${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border p-6`}>
             <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
@@ -182,9 +174,10 @@ export default function StreamPage() {
             <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-6`}>
               Join our community for updates
             </p>
+
             <button
               onClick={handleTelegramJoin}
-              className={`${telegramButton} px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 mx-auto`}
+              className={`bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 mx-auto`}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.569 2.846-1.527 9.99-2.166 13.15-.27 1.33-1.018 1.58-1.681 1.58-.632 0-1.071-.264-1.404-.623-.842-.888-2.442-2.142-3.33-2.777-1.218-.871-2.135-1.315-3.403-2.174-1.314-.89-1.639-1.31-.755-2.326 1.904-2.18 3.81-4.36 5.714-6.54.19-.218.363-.218.363 0 .05.116-.212.263-.212.379L9.2 12.15s-.225.188-.412.075c-1.45-.875-2.9-1.75-4.35-2.625-.45-.275-.45-.563 0-.838l13.8-5.625c.45-.188.9.075.675.825z"/>
