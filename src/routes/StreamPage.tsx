@@ -11,50 +11,9 @@ export default function StreamPage() {
   const [isDarkMode, setIsDarkMode] = useState(globalTheme.isDarkMode)
   const [streamLoaded, setStreamLoaded] = useState(false)
   const [streamError, setStreamError] = useState(false)
-  const [accessDenied, setAccessDenied] = useState(false)
-  const [checkingAccess, setCheckingAccess] = useState(true)
 
   // Get user device preference
   const userDevice = profile?.device_preference || 'Android'
-  
-  // **DASHBOARD REFERRER CHECK**
-  useEffect(() => {
-    const checkAccess = () => {
-      // Check if user came from dashboard
-      const referrer = document.referrer
-      const sessionReferrer = sessionStorage.getItem('dashboardReferrer')
-      
-      // Check for dashboard referrer
-      const validReferrer = referrer.includes('watchwithradar.live/dashboard') || 
-                           referrer.includes('localhost') && referrer.includes('/dashboard') ||
-                           sessionReferrer?.includes('/dashboard')
-      
-      // If no valid referrer, deny access
-      if (!validReferrer) {
-        setAccessDenied(true)
-        setCheckingAccess(false)
-        return
-      }
-      
-      // Access granted
-      setAccessDenied(false)
-      setCheckingAccess(false)
-    }
-    
-    // Small delay to ensure referrer is captured
-    setTimeout(checkAccess, 100)
-  }, [])
-
-  // **DEVICE-BASED IFRAME URLs**
-  const getStreamUrl = () => {
-    if (userDevice === 'iOS') {
-      return 'https://radarofc.onrender.com/g.html'
-    } else {
-      return 'https://radarofc.onrender.com/android.html'
-    }
-  }
-
-  const streamUrl = getStreamUrl()
 
   useEffect(() => {
     const handleThemeChange = (event: CustomEvent) => {
@@ -67,14 +26,16 @@ export default function StreamPage() {
     }
   }, [])
 
-  // **ULTRA SIMPLE: Plain colors only - No gradients, backdrop-blur, shadows**
-  const bg = isDarkMode ? 'bg-slate-900' : 'bg-gray-50'
-  const cardBg = isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'
-  const text = isDarkMode ? 'text-white' : 'text-gray-900'
-  const textSecondary = isDarkMode ? 'text-slate-300' : 'text-gray-700'
-  const textMuted = isDarkMode ? 'text-slate-400' : 'text-gray-500'
-  const telegramButton = 'bg-blue-600 hover:bg-blue-700 text-white'
-  const authButton = 'bg-blue-600 hover:bg-blue-700 text-white'
+  // **DEVICE-BASED IFRAME URLs**
+  const getStreamUrl = () => {
+    if (userDevice === 'iOS') {
+      return 'https://radarofc.onrender.com/g.html'
+    } else {
+      return 'https://radarofc.onrender.com/android.html'
+    }
+  }
+
+  const streamUrl = getStreamUrl()
 
   const handleTelegramJoin = () => {
     window.open('https://t.me/RadarxCricket', '_blank')
@@ -108,89 +69,28 @@ export default function StreamPage() {
 
   const DeviceIcon = getDeviceIcon()
 
-  // **SIMPLE CHECKING SCREEN**
-  if (checkingAccess) {
-    return (
-      <div className={`min-h-screen ${bg}`}>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4 animate-spin"></div>
-            <p className={`${text} text-base`}>Verifying access...</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // **SIMPLE ACCESS DENIED SCREEN**
-  if (accessDenied) {
-    return (
-      <div className={`min-h-screen ${bg}`}>
-        <div className="flex items-center justify-center min-h-screen px-4">
-          <div className={`${cardBg} rounded-xl border p-8 max-w-md w-full text-center`}>
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <LockClosedIcon className="w-8 h-8 text-red-500" />
-            </div>
-            
-            <h2 className={`text-2xl font-bold ${text} mb-4`}>
-              Access Restricted
-            </h2>
-            
-            <p className={`${textMuted} text-base mb-6`}>
-              Please {session ? 'navigate through dashboard' : 'sign up or login'} to view streams
-            </p>
-            
-            <div className="space-y-3">
-              {session ? (
-                <button
-                  onClick={handleGoToDashboard}
-                  className={`${authButton} w-full px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2`}
-                >
-                  <TvIcon className="w-5 h-5" />
-                  Go to Dashboard
-                </button>
-              ) : (
-                <button
-                  onClick={handleGoToAuth}
-                  className={`${authButton} w-full px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2`}
-                >
-                  <LockClosedIcon className="w-5 h-5" />
-                  Sign Up / Login
-                </button>
-              )}
-            </div>
-            
-            <p className={`${textMuted} text-sm mt-6`}>
-              Access through proper navigation only
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   // **ULTRA SIMPLE MAIN PAGE**
   return (
-    <div className={`min-h-screen ${bg}`}>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'}`}>
       <div className="w-full max-w-4xl mx-auto px-4 py-6">
         
         {/* Simple header */}
         <div className="mb-6">
-          <div className={`${cardBg} rounded-xl border p-6`}>
+          <div className={`${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border p-6`}>
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-600 rounded-xl mb-4">
                 <TvIcon className="w-6 h-6 text-white" />
               </div>
-              <h1 className={`text-2xl font-bold ${text} mb-2`}>
+              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
                 Live Cricket Stream
               </h1>
-              <p className={`${textMuted} text-base mb-3`}>
+              <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-3`}>
                 Watch matches live
               </p>
               
               <div className="flex items-center justify-center gap-2">
                 <DeviceIcon className="w-4 h-4 text-blue-600" />
-                <span className={`${textSecondary} text-sm`}>
+                <span className={`${isDarkMode ? 'text-slate-300' : 'text-gray-700'} text-sm`}>
                   {userDevice} optimized
                 </span>
               </div>
@@ -200,13 +100,13 @@ export default function StreamPage() {
 
         {/* Simple stream container */}
         <div className="mb-6">
-          <div className={`${cardBg} rounded-xl border overflow-hidden`}>
+          <div className={`${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border overflow-hidden`}>
             
             <div className="p-4 border-b border-current border-opacity-10">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <PlayIcon className="w-5 h-5 text-blue-600" />
-                  <h2 className={`text-lg font-bold ${text}`}>
+                  <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     Live Stream
                   </h2>
                 </div>
@@ -237,16 +137,15 @@ export default function StreamPage() {
                   onLoad={handleStreamLoad}
                   onError={handleStreamError}
                   title={`Cricket Stream - ${userDevice}`}
-                  referrerPolicy="no-referrer-when-downgrade"
                 />
               ) : (
                 <div className="flex items-center justify-center h-80">
                   <div className="text-center">
                     <SignalIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                    <h3 className={`text-lg font-bold ${text} mb-2`}>
+                    <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
                       Stream Unavailable
                     </h3>
-                    <p className={`${textMuted} text-base mb-4`}>
+                    <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-4`}>
                       Please try again later
                     </p>
                     <button 
@@ -258,7 +157,7 @@ export default function StreamPage() {
                   </div>
                 </div>
               )}
-              
+
               {/* **SIMPLE: Basic loading** */}
               {!streamLoaded && !streamError && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -275,13 +174,13 @@ export default function StreamPage() {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   <CheckIcon className="w-4 h-4 text-green-500" />
-                  <span className={`${textMuted} text-sm`}>HD Quality</span>
+                  <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-sm`}>HD Quality</span>
                 </div>
-                </div>
-                
+
                 <div className="flex items-center gap-2">
                   <ClockIcon className="w-4 h-4 text-blue-500" />
-                  <span className={`${textMuted} text-sm`}>Live Coverage</span>
+                  <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-sm`}>Live Coverage</span>
+                </div>
               </div>
             </div>
           </div>
@@ -289,11 +188,11 @@ export default function StreamPage() {
 
         {/* Simple Telegram Button */}
         <div className="text-center">
-          <div className={`${cardBg} rounded-xl border p-6`}>
-            <h3 className={`text-lg font-bold ${text} mb-3`}>
+          <div className={`${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} rounded-xl border p-6`}>
+            <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
               Stay Updated
             </h3>
-            <p className={`${textMuted} text-base mb-6`}>
+            <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-700'} text-base mb-6`}>
               Join our community for updates
             </p>
             
