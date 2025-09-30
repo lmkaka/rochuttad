@@ -83,6 +83,11 @@ export default function App() {
           path="/stream" 
           element={<StreamPage />} 
         />
+
+          <Route 
+          path="/streamaus" 
+          element={<StreamPage />} 
+        />
         
         {/* Default Route */}
         <Route 
